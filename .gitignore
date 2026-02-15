@@ -1,0 +1,12 @@
+config/mainConfig.php
+assets/images/logo/*
+assets/images/slider/*
+assets/images/products/*
+assets/images/brand-category/*
+json/*
+temp/*
+access.log
+Archive.zip
+mysql-tunnel.sh
+mysql-tunnel2.sh
+router.php

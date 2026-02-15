@@ -1,0 +1,39 @@
+{
+    "manifestResponse": {
+        "hdr": {
+            "messageType": "SHIPMENT",
+            "messageDateTime": "2025-07-04T16:54:16+08:00",
+            "messageVersion": "1.0",
+            "messageLanguage": "en"
+        },
+        "bd": {
+            "shipmentItems": [
+                {
+                    "shipmentID": "URUZORDERTEST181820",
+                    "deliveryConfirmationNo": "7027071925620145",
+                    "responseStatus": {
+                        "code": "200",
+                        "message": "SUCCESS",
+                        "messageDetails": [
+                            {
+                                "messageDetail": "Shipment processed Successfully; Return Shipping Service has been updated to PDO."
+                            }
+                        ]
+                    },
+                    "deliveryDepotCode": "MYKBR1",
+                    "primarySortCode": "EAS1",
+                    "secondarySortCode": "D02"
+                }
+            ],
+            "responseStatus": {
+                "code": "200",
+                "message": "SUCCESS",
+                "messageDetails": [
+                    {
+                        "messageDetail": "All shipments processed successfully"
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,109 @@
+.star-yellow{
+    color: darkorange !important;
+}
+
+.icon-menu{
+    text-align: center;
+    background: #fff;
+    width: 35px !important;
+    height: 35px !important;
+    line-height: 35px !important;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+#sidenav-main ul ul {
+  display: none;
+  margin-left: 20px;
+  padding-left: 0;
+}
+
+#sidenav-main ul ul.open {
+  display: block;
+}
+
+.nav-item ul {
+    display: none;
+    list-style: none;
+    padding-left: 20px;
+    background-color: #fff;
+  }
+
+  .nav-item.open > ul {
+    display: block;
+  }
+
+  .nav-item > a {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .nav-item ul li a {
+    display: block;
+    padding: 8px;
+    color: #ccc;
+    text-decoration: none;
+    font-size: 0.75rem;
+  }
+
+  .nav-item ul li a:hover {
+    color: #fff;
+    cursor: pointer;
+    font-weight: bold;
+    background: #cdd;
+  }
+
+  .bagde-menu{
+    position: relative !important;
+  }
+
+  .menu-badge{
+    position: absolute;
+    top: 9px;
+    right: 15px;
+    font-size: 12px;
+    background: black;
+    width: min-content;
+    padding: 0px 5px;
+    border-radius: 5px;
+    color: #fff;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  .f-w-b{
+    font-weight:bolder !important;
+  }
+
+  .nav-link{
+    position: relative;
+  }
+
+  .menu-chevron-down{
+    position: absolute;
+    top: 14px;
+    right: 0;
+    font-size: 12px !important;
+    /*transition: transform 0.3s;*/
+  }
+
+  .nav-link.active .menu-chevron-down {
+    transform: rotate(-90deg);
+    margin-top: -10px;
+    margin-right: 10px;
+  }
+
+  .cactive{
+    border: 3px solid red;
+    border-radius: 10px;
+    background: antiquewhite;
+    font-weight: bold;
+    color:#000 !important;
+  }
+  .required-item{
+    color:red !important;
+  }

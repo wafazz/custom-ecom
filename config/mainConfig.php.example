@@ -1,0 +1,58 @@
+<?php
+session_start();
+ini_set('memory_limit', '4095M');
+ini_set('max_input_vars', '5000');
+
+function getDbConnection() {
+    $DBhosts = "localhost";
+    $DBusers = "root";
+    $DBpasss = "";
+    $DBnames = "db_name";
+
+    // Create a new connection
+    $conn = new mysqli($DBhosts, $DBusers, $DBpasss, $DBnames, 3306, "/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock");
+    //$conn = new mysqli($DBhosts, $DBusers, $DBpasss, $DBnames, 3306);
+
+
+    // Check for errors
+    if ($conn->connect_error) {
+        die("Database connection failed: " . $conn->connect_error);
+    }
+
+    return $conn;
+}
+
+
+
+
+$request = $_SERVER['REQUEST_URI'];
+$requests = str_replace("/", "", $request);
+
+$timezone = "Asia/Kuala_Lumpur";
+if(function_exists('date_default_timezone_set')) date_default_timezone_set($timezone);
+$dates = date("Y-m-d H:i:s");
+
+function getMainUrl() {
+    $domainURL = "http://".$_SERVER['SERVER_NAME'].":8000/";
+
+    return $domainURL;
+}
+
+
+function mainDomain()
+{
+    $mainDomain = "http://localhost:8000/";
+    return $mainDomain;
+}
+
+$domainURL = "http://".$_SERVER['SERVER_NAME'].":8000/"; 
+$domainURLs = "http://".$_SERVER['SERVER_NAME'].":8000/";
+$mainDOMAIN = "http://".$_SERVER['SERVER_NAME'].":8000/";
+$webtitle = "My Hawanis Exclusive";
+
+$actual_link = $domainURLs.$_SERVER['REQUEST_URI'];
+
+$rout = explode("/", $request);
+
+
+
