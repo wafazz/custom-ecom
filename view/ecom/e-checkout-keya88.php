@@ -641,7 +641,7 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                             $('#postcode').autocomplete({
                                 source: function(request, response) {
                                     $.ajax({
-                                        url: 'autocomplete-postcode-city.php',
+                                        url: '<?= $domainURL ?>autocomplete-postcode-city.php',
                                         dataType: 'json',
                                         data: {
                                             q: request.term
@@ -655,6 +655,7 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                 select: function(event, ui) {
                                     $('#postcode').val(ui.item.postcode);
                                     $('#city').val(ui.item.city);
+                                    $('#state').val(ui.item.state).trigger('change');
                                     return false;
                                 }
                             }).autocomplete("instance")._renderItem = function(ul, item) {
