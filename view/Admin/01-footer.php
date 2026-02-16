@@ -832,52 +832,48 @@ if($pageName == "Dashboard")
   ?>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const source = new EventSource("/live-orders.php");
+    function fetchLiveData() {
+        fetch("/live_orders.json?" + Date.now())
+            .then(r => r.json())
+            .then(data => {
+                const totalOrdersEl = document.getElementById('totalOrders');
+                const totalSalesEl = document.getElementById('totalSales');
+                const totalReturnsEl = document.getElementById('totalReturns');
+                const totalOrdersElT = document.getElementById('totalOrdersToday');
+                const totalSalesElT = document.getElementById('totalSalesToday');
+                const totalSalesThisMonth = document.getElementById('totalSalesThisMonth');
+                const totalSalesLastMonth = document.getElementById('totalSalesLastMonth');
+                const liveViewL = document.getElementById('liveView');
+                const list = document.getElementById('orderList');
 
-    source.onmessage = function(e) {
-        try {
-            const data = JSON.parse(e.data);
+                if (totalOrdersEl) totalOrdersEl.innerHTML = data.totals.orders;
+                if (totalSalesEl) totalSalesEl.innerHTML = data.totals.sales;
+                if (totalReturnsEl) totalReturnsEl.innerHTML = data.totals.returns;
+                if (totalOrdersElT) totalOrdersElT.innerHTML = data.totals.orders_today;
+                if (totalSalesThisMonth) totalSalesThisMonth.innerHTML = data.totals.sales_this_month;
+                if (totalSalesLastMonth) totalSalesLastMonth.innerHTML = data.totals.sales_last_month;
+                if (totalSalesElT) totalSalesElT.innerHTML = data.totals.sales_today;
+                if (liveViewL) liveViewL.innerHTML = "<i class=\"fa-solid fa-eye\"></i> " + data.totals.live_visitors + " <span class=\"blink\">LIVE</span>";
 
-            const totalOrdersEl = document.getElementById('totalOrders');
-            const totalSalesEl = document.getElementById('totalSales');
-            const totalReturnsEl = document.getElementById('totalReturns');
-            const totalOrdersElT = document.getElementById('totalOrdersToday');
-            const totalSalesElT = document.getElementById('totalSalesToday');
-            const totalSalesThisMonth = document.getElementById('totalSalesThisMonth');
-            const totalSalesLastMonth = document.getElementById('totalSalesLastMonth');
-            const liveViewL = document.getElementById('liveView');
-            const list = document.getElementById('orderList');
+                if (list) {
+                    list.innerHTML = '';
+                    data.orders.forEach(o => {
+                        list.innerHTML += `<tr>
+                            <td class="text-secondary text-xxs font-weight-bolder opacity-7">${o.id}</td>
+                            <td class="text-secondary text-xxs font-weight-bolder opacity-7">${o.customer_name}</td>
+                            <td class="text-secondary text-xxs font-weight-bolder opacity-7" style="text-align:center;">${o.total_qty}</td>
+                            <td class="text-secondary text-xxs font-weight-bolder opacity-7" style="text-align:center;">${o.sign} ${o.amount}</td>
+                            <td class="text-secondary text-xxs font-weight-bolder opacity-7" style="text-align:center;">${o.country}</td>
+                            <td class="text-secondary text-xxs font-weight-bolder opacity-7">${o.status_html}</td>
+                        </tr>`;
+                    });
+                }
+            })
+            .catch(err => console.error("Error fetching live data:", err));
+    }
 
-            if (totalOrdersEl) totalOrdersEl.innerHTML = data.totals.orders;
-            if (totalSalesEl) totalSalesEl.innerHTML = data.totals.sales;
-            if (totalReturnsEl) totalReturnsEl.innerHTML = data.totals.returns;
-            if (totalOrdersElT) totalOrdersElT.innerHTML = data.totals.orders_today;
-            if (totalSalesThisMonth) totalSalesThisMonth.innerHTML = data.totals.sales_this_month;
-            if (totalSalesLastMonth) totalSalesLastMonth.innerHTML = data.totals.sales_last_month;
-            if (totalSalesElT) totalSalesElT.innerHTML = data.totals.sales_today;
-            if (liveViewL) liveViewL.innerHTML = "<i class=\"fa-solid fa-eye\"></i> " + data.totals.live_visitors + " <span class=\"blink\">LIVE</span>";
-
-            if (list) {
-                list.innerHTML = '';
-                data.orders.forEach(o => {
-                    list.innerHTML += `<tr>
-                        <td class="text-secondary text-xxs font-weight-bolder opacity-7">${o.id}</td>
-                        <td class="text-secondary text-xxs font-weight-bolder opacity-7">${o.customer_name}</td>
-                        <td class="text-secondary text-xxs font-weight-bolder opacity-7" style="text-align:center;">${o.total_qty}</td>
-                        <td class="text-secondary text-xxs font-weight-bolder opacity-7" style="text-align:center;">${o.sign} ${o.amount}</td>
-                        <td class="text-secondary text-xxs font-weight-bolder opacity-7" style="text-align:center;">${o.country}</td>
-                        <td class="text-secondary text-xxs font-weight-bolder opacity-7">${o.status_html}</td>
-                    </tr>`;
-                });
-            }
-        } catch (err) {
-            console.error("Error processing live order update:", err, e.data);
-        }
-    };
-
-    source.onerror = function(err) {
-        console.error("EventSource connection error:", err);
-    };
+    fetchLiveData();
+    setInterval(fetchLiveData, 2000);
 });
 </script>
   <?php
