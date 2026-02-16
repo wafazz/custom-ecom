@@ -155,7 +155,11 @@ $routes = [
         '/api/list-category' => 'API\mainController@listCategory',
 
         //senangpay robot
-        '/bot-senangpay' => '\Ecom\BotSenangpayCotroller@handleBot'
+        '/bot-senangpay' => '\Ecom\BotSenangpayCotroller@handleBot',
+
+        //bayarcash
+        '/proceed-bayarcash' => 'Ecom\checkoutController@proceedPaymentBayarcash',
+        '/bayarcash-thank-you' => 'Ecom\checkoutController@thankYouBayarcash'
 
     ],
     'POST' => [
@@ -199,6 +203,7 @@ $routes = [
         '/add-to-cart' => 'Ecom\AddToCartController@addCart',
         '/checkout' => 'Ecom\checkoutController@nextCalculate',
         '/senangpay-callback' => 'Ecom\checkoutController@callBackSenangPay',
+        '/bayarcash-callback' => 'Ecom\checkoutController@callBackBayarcash',
         '/update-checkout' => 'Ecom\checkoutController@checkoutUpdate',
         '/customer/support-ticket' => 'Ecom\supportController@submittedTicket',
         '/customer/ticket-details' => 'Ecom\supportController@submittedReplyTicket',

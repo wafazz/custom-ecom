@@ -468,7 +468,8 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
 
                                 <!-- <span onclick="window.location.href='<?= $domainURL ?>proceed-payment'" class="btn btn-info"><img src="https://app.senangpay.my/public/images/UPD-btn-pay-solid.png"></span> -->
                                 <p>By clicking "<b>Pay Now</b>" button below, you're agree to our "PURCHASE" terms and conditions.</p>
-                                <a href="<?= $domainURL ?>proceed-payment" class="site-btns">Pay Now</a>
+                                <a href="<?= $domainURL ?>proceed-payment" class="site-btns">Pay Now (SenangPay)</a>
+                                <a href="<?= $domainURL ?>proceed-bayarcash" class="site-btns" style="background:#1a73e8; margin-top:10px;">Pay Now (Bayarcash)</a>
 
                                 <!-- <p style="font-weight:bold;color:red;">Note: For end user please dont use SenangPay above for payment. Now we in the middle of running/conducting testing issues. End user, Please use payment below for make payment.</p> -->
                                 <!-- <p style="font-weight:bold;color:green;">Note: For FPX Payment & E-Wallet (T&G, Boost, GrabPay, ShopeePay) please use SenangPay above.</p>
