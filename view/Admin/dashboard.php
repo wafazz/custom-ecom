@@ -154,7 +154,7 @@ include "01-menu.php";
               </div>
             </div>
           </div>
-          <div class="col-lg-6 col-md-6 col-12 mt-4 mt-md-0">
+          <div class="col-lg-4 col-md-6 col-12 mt-4 mt-md-0">
             <div class="card">
               <span class="mask bg-info opacity-10 border-radius-lg"></span>
               <div class="card-body p-3 position-relative">
@@ -183,7 +183,7 @@ include "01-menu.php";
               </div>
             </div>
           </div>
-          <div class="col-lg-6 col-md-6 col-12 mt-4 mt-md-0">
+          <div class="col-lg-4 col-md-6 col-12 mt-4 mt-md-0">
             <div class="card">
               <span class="mask bg-info opacity-10 border-radius-lg"></span>
               <div class="card-body p-3 position-relative">
