@@ -109,6 +109,33 @@ function rate_limit($key, $maxAttempts, $windowSeconds)
     }
 }
 
+function queue_push($queue, $jobData)
+{
+    $redis = getRedis();
+    if (!$redis) return false;
+    try {
+        $redis->lpush($queue, [json_encode($jobData)]);
+        return true;
+    } catch (\Exception $e) {
+        return false;
+    }
+}
+
+function queue_pop($queue, $timeout = 5)
+{
+    $redis = getRedis();
+    if (!$redis) return null;
+    try {
+        $result = $redis->brpop([$queue], $timeout);
+        if ($result) {
+            return json_decode($result[1], true);
+        }
+        return null;
+    } catch (\Exception $e) {
+        return null;
+    }
+}
+
 class RedisSessionHandler implements \SessionHandlerInterface
 {
     private $redis;
