@@ -65,7 +65,7 @@
                         spellcheck="false">
                         <option selected disabled readonly value="">select one</option>
                         <?php
-                        while($row = $listCountry->fetch_array(MYSQLI_ASSOC)){
+                        foreach($listCountry as $row){
                             ?>
                             <option value="<?= $row["id"] ?>"><?= $row["name"] ?></option>
                             <?php
