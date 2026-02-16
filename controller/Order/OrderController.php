@@ -154,11 +154,12 @@ class OrderController
             } else {
                 header("Location: " . $domainURL . "new-order");
             }
+            exit;
         }
 
         $search = isset($_GET['filter']) ? $conn->real_escape_string($_GET['filter']) : '';
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-        $qty = $_GET["qty"];
+        $qty = isset($_GET['qty']) && is_numeric($_GET['qty']) ? (int)$_GET['qty'] : null;
 
         $limit = 100;
         $offset = ($page - 1) * $limit;
@@ -321,17 +322,6 @@ class OrderController
 
         if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
             header("Location: " . $this->domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            //header("Location: ".$this->domainURL."access-denied");
-            require_once __DIR__ . '/../../view/Admin/access-denied.php';
             exit;
         }
 
@@ -348,6 +338,7 @@ class OrderController
             } else {
                 header("Location: " . $domainURL . "process-order");
             }
+            exit;
         }
 
 
@@ -456,18 +447,6 @@ class OrderController
 
         if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
             header("Location: " . $this->domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            //header("Location: ".$this->domainURL."access-denied");
-            require_once __DIR__ . '/../../view/Admin/access-denied.php';
             exit;
         }
 
@@ -484,6 +463,7 @@ class OrderController
             } else {
                 header("Location: " . $domainURL . "indelivery-order");
             }
+            exit;
         }
 
         $search = isset($_GET['filter']) ? $conn->real_escape_string($_GET['filter']) : '';
@@ -628,21 +608,8 @@ class OrderController
 
         if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
             header("Location: " . $this->domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
             exit;
         }
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            //header("Location: ".$this->domainURL."access-denied");
-            require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-
-
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
@@ -657,12 +624,13 @@ class OrderController
             } else {
                 header("Location: " . $domainURL . "completed-order");
             }
+            exit;
         }
 
         $search = isset($_GET['filter']) ? $conn->real_escape_string($_GET['filter']) : '';
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 
-        $qty = $_GET["qty"];
+        $qty = isset($_GET['qty']) && is_numeric($_GET['qty']) ? (int)$_GET['qty'] : null;
 
         $limit = 30;
         $offset = ($page - 1) * $limit;
@@ -745,21 +713,8 @@ class OrderController
 
         if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
             header("Location: " . $this->domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
             exit;
         }
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            //header("Location: ".$this->domainURL."access-denied");
-            require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-
-
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
@@ -774,12 +729,13 @@ class OrderController
             } else {
                 header("Location: " . $domainURL . "returned-order");
             }
+            exit;
         }
 
         $search = isset($_GET['filter']) ? $conn->real_escape_string($_GET['filter']) : '';
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 
-        $qty = $_GET["qty"];
+        $qty = isset($_GET['qty']) && is_numeric($_GET['qty']) ? (int)$_GET['qty'] : null;
 
         $limit = 30;
         $offset = ($page - 1) * $limit;
@@ -864,21 +820,8 @@ class OrderController
 
         if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
             header("Location: " . $this->domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
             exit;
         }
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            //header("Location: ".$this->domainURL."access-denied");
-            require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
@@ -893,14 +836,13 @@ class OrderController
             } else {
                 header("Location: " . $domainURL . "cancelled-order");
             }
+            exit;
         }
-
-
 
         $search = isset($_GET['filter']) ? $conn->real_escape_string($_GET['filter']) : '';
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 
-        $qty = $_GET["qty"];
+        $qty = isset($_GET['qty']) && is_numeric($_GET['qty']) ? (int)$_GET['qty'] : null;
 
         $limit = 30;
         $offset = ($page - 1) * $limit;
@@ -1118,20 +1060,8 @@ class OrderController
 
         if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
             header("Location: " . $this->domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
             exit;
         }
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            //header("Location: ".$this->domainURL."access-denied");
-            require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
@@ -1388,20 +1318,8 @@ class OrderController
 
         if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
             header("Location: " . $this->domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
             exit;
         }
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            //header("Location: ".$this->domainURL."access-denied");
-            require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
@@ -1730,18 +1648,6 @@ class OrderController
 
         if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
             header("Location: " . $this->domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            //header("Location: ".$this->domainURL."access-denied");
-            require_once __DIR__ . '/../../view/Admin/access-denied.php';
             exit;
         }
 
