@@ -1258,4 +1258,44 @@ class ProductController {
 
         echo json_encode(['success' => true, 'message' => $msg]);
     }
+
+    public function bulkDeleteBrand()
+    {
+        if (!is_login()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+
+        $conn = getDbConnection();
+        $dateNow = dateNow();
+
+        $ids = $_POST['ids'] ?? [];
+        if (empty($ids)) {
+            echo json_encode(['success' => false, 'message' => 'No brands selected']);
+            return;
+        }
+
+        $deleted = 0;
+        $skipped = 0;
+        foreach ($ids as $id) {
+            $id = intval($id);
+            $check = $conn->query("SELECT COUNT(*) AS cnt FROM products WHERE brand_id='$id' AND deleted_at IS NULL");
+            $row = $check->fetch_assoc();
+            if ($row['cnt'] > 0) {
+                $skipped++;
+                continue;
+            }
+            $conn->query("UPDATE `brands` SET `deleted_at`='$dateNow' WHERE `id`='$id' AND `deleted_at` IS NULL");
+            if ($conn->affected_rows > 0) {
+                $deleted++;
+            }
+        }
+
+        $msg = "{$deleted} brand(s) deleted.";
+        if ($skipped > 0) {
+            $msg .= " {$skipped} skipped (has products).";
+        }
+
+        echo json_encode(['success' => true, 'message' => $msg]);
+    }
 }

@@ -174,6 +174,7 @@ $routes = [
         '/brand-product' => 'Product\ProductController@productBrand',
         '/stock-control' => 'Product\ProductController@stockControl',
         '/bulk-delete-category' => 'Product\ProductController@bulkDeleteCategory',
+        '/bulk-delete-brand' => 'Product\ProductController@bulkDeleteBrand',
         '/new-order' => 'Order\OrderController@submitCourier',
         '/process-order' => 'Order\OrderController@printAWB',
 
