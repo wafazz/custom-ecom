@@ -173,6 +173,7 @@ $routes = [
         '/category-product' => 'Product\ProductController@productCategory',
         '/brand-product' => 'Product\ProductController@productBrand',
         '/stock-control' => 'Product\ProductController@stockControl',
+        '/bulk-delete-category' => 'Product\ProductController@bulkDeleteCategory',
         '/new-order' => 'Order\OrderController@submitCourier',
         '/process-order' => 'Order\OrderController@printAWB',
 

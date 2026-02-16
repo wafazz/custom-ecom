@@ -23,6 +23,7 @@ include "01-menu.php";
                 </div>
                 <div class="card-body px-0 pb-2">
                     <button class="open-btn" onclick="openModal()">Add New <?= $nameBtn; ?></button>
+                    <button class="open-btn" id="btnDeleteSelected" style="background-color:#d33;color:#fff;display:none;margin-left:10px;" onclick="bulkDeleteCategory()">Delete Selected (<span id="selectedCount">0</span>)</button>
 
                     <div style="display: block;
     margin-left: 20px;
@@ -38,8 +39,8 @@ include "01-menu.php";
                                 vertical-align: top;
                             }
 
-                            /* EXCEPTION: left-align the "name" column (2nd column) */
-                            #categoryTable td:nth-child(2) {
+                            /* EXCEPTION: left-align the "name" column (3rd column now, after checkbox) */
+                            #categoryTable td:nth-child(3) {
                                 text-align: left;
                                 vertical-align: top;
                             }
@@ -47,6 +48,7 @@ include "01-menu.php";
                         <table id="categoryTable" class="display" style="width:100%">
                             <thead>
                                 <tr>
+                                    <th style="width:30px;"><input type="checkbox" id="selectAll"></th>
                                     <th>ID</th>
                                     <th>Name</th>
                                     <th>Slug</th>
@@ -59,7 +61,15 @@ include "01-menu.php";
                             <tbody>
                                 <?php if ($result->num_rows > 0): ?>
                                     <?php while ($row = $result->fetch_assoc()): ?>
+                                        <?php $countC = getUsedCategory($row['id']); ?>
                                         <tr>
+                                            <td>
+                                                <?php if ($countC["count"] < "1"): ?>
+                                                    <input type="checkbox" class="row-check" value="<?= $row['id'] ?>">
+                                                <?php else: ?>
+                                                    <input type="checkbox" disabled title="Has <?= $countC['count'] ?> product(s)">
+                                                <?php endif; ?>
+                                            </td>
                                             <td>
                                                 <?= htmlspecialchars($row['id']) ?>
                                                 <i class="fa-solid fa-pen-to-square" style="display: block;
@@ -71,7 +81,6 @@ include "01-menu.php";
                                                     onClick="window.location.href = '<?= $domainURL; ?>update-category/<?= $row['id'] ?>'"></i>
 
                                                 <?php
-                                                $countC = getUsedCategory($row['id']);
                                                 if ($countC["count"] < "1") {
                                                     ?>
                                                     <i class="fa-solid fa-trash" style="display: block;
@@ -133,8 +142,66 @@ include "01-menu.php";
 
                         <script>
                             $(document).ready(function () {
-                                $('#categoryTable').DataTable();
+                                $('#categoryTable').DataTable({
+                                    columnDefs: [{ orderable: false, targets: 0 }]
+                                });
+
+                                $('#selectAll').on('change', function() {
+                                    var checked = this.checked;
+                                    $('#categoryTable .row-check').each(function() {
+                                        this.checked = checked;
+                                    });
+                                    updateSelectedCount();
+                                });
+
+                                $('#categoryTable').on('change', '.row-check', function() {
+                                    var total = $('#categoryTable .row-check').length;
+                                    var checked = $('#categoryTable .row-check:checked').length;
+                                    $('#selectAll').prop('checked', total === checked && total > 0);
+                                    updateSelectedCount();
+                                });
                             });
+
+                            function updateSelectedCount() {
+                                var count = $('#categoryTable .row-check:checked').length;
+                                $('#selectedCount').text(count);
+                                $('#btnDeleteSelected').toggle(count > 0);
+                            }
+
+                            function bulkDeleteCategory() {
+                                var ids = [];
+                                $('#categoryTable .row-check:checked').each(function() {
+                                    ids.push($(this).val());
+                                });
+                                if (ids.length === 0) return;
+
+                                Swal.fire({
+                                    title: 'Delete ' + ids.length + ' categories?',
+                                    text: "This action cannot be undone!",
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#d33',
+                                    cancelButtonColor: '#3085d6',
+                                    confirmButtonText: 'Yes, delete all!'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        $.ajax({
+                                            url: '<?= $domainURL ?>bulk-delete-category',
+                                            method: 'POST',
+                                            data: { ids: ids },
+                                            success: function(resp) {
+                                                var data = typeof resp === 'string' ? JSON.parse(resp) : resp;
+                                                Swal.fire('Deleted!', data.message, 'success').then(() => {
+                                                    location.reload();
+                                                });
+                                            },
+                                            error: function() {
+                                                Swal.fire('Error', 'Failed to delete categories.', 'error');
+                                            }
+                                        });
+                                    }
+                                });
+                            }
                         </script>
 
 
