@@ -116,6 +116,7 @@ include "01-menu.php";
                             <thead>
                                 <tr>
                                     <th class="text-center">Country</th>
+                                    <th class="text-center">Shipping Zone</th>
                                     <th class="text-center">Benchmark Amount</th>
                                     <th class="text-center">COD Fee (Below)</th>
                                     <th class="text-center">COD Fee (Above/Equal)</th>
@@ -124,12 +125,21 @@ include "01-menu.php";
                             </thead>
                             <tbody>
                                 <?php
-                                $codResult = $conn->query("SELECT * FROM `cod_charges` ORDER BY country_id ASC");
+                                $codResult = $conn->query("SELECT * FROM `cod_charges` ORDER BY country_id ASC, shipping_zone ASC");
                                 while ($codRow = $codResult->fetch_array()) {
                                     $codCountry = getCountryP($codRow["country_id"]);
+                                    $zoneName = '';
+                                    if ($codCountry["name"] == "Malaysia" && $codRow["shipping_zone"] == "1") {
+                                        $zoneName = "West Malaysia";
+                                    } else if ($codCountry["name"] == "Malaysia" && $codRow["shipping_zone"] == "2") {
+                                        $zoneName = "East Malaysia";
+                                    } else {
+                                        $zoneName = "All " . $codCountry["name"];
+                                    }
                                 ?>
                                     <tr>
                                         <td class="text-center"><?= $codCountry["name"] ?></td>
+                                        <td class="text-center"><?= $zoneName ?></td>
                                         <td class="text-center"><?= $codCountry["sign"] ?> <?= number_format($codRow["benchmark_amount"], 2) ?></td>
                                         <td class="text-center"><?= $codCountry["sign"] ?> <?= number_format($codRow["cod_fee_below"], 2) ?></td>
                                         <td class="text-center"><?= $codCountry["sign"] ?> <?= number_format($codRow["cod_fee_above"], 2) ?></td>
@@ -173,6 +183,14 @@ include "01-menu.php";
                     ?>
                 </select>
 
+                <div id="codZoneDiv" style="display:none;">
+                    Shipping Zone
+                    <select name="shipping_zone" id="codShippingZone" class="form-control" style="margin-bottom:15px;">
+                        <option value="1">West Malaysia</option>
+                        <option value="2">East Malaysia</option>
+                    </select>
+                </div>
+
                 Benchmark Amount (<span id="codCurs1">RM</span>)
                 <input type="number" class="form-control" name="benchmark_amount" min="0" step="0.01" placeholder="e.g. 100.00" required style="margin-bottom:15px;">
 
@@ -196,6 +214,13 @@ include "01-menu.php";
             document.getElementById('codCurs1').innerText = sign;
             document.getElementById('codCurs2').innerText = sign;
             document.getElementById('codCurs3').innerText = sign;
+            // Show zone dropdown only for Malaysia (country_id=1)
+            if (this.value == '1') {
+                document.getElementById('codZoneDiv').style.display = 'block';
+            } else {
+                document.getElementById('codZoneDiv').style.display = 'none';
+                document.getElementById('codShippingZone').value = '1';
+            }
         });
         window.addEventListener('click', function(e) {
             var m = document.getElementById('codModal');

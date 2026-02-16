@@ -298,6 +298,7 @@ class SettingController
         $dateNow = dateNow();
 
         $countryId = $_POST["country_id"] ?? "";
+        $shippingZone = $_POST["shipping_zone"] ?? "1";
         $benchmarkAmount = $_POST["benchmark_amount"] ?? "0";
         $codFeeBelow = $_POST["cod_fee_below"] ?? "0";
         $codFeeAbove = $_POST["cod_fee_above"] ?? "0";
@@ -308,12 +309,12 @@ class SettingController
             return;
         }
 
-        $existing = $conn->query("SELECT * FROM `cod_charges` WHERE `country_id`='$countryId'");
+        $existing = $conn->query("SELECT * FROM `cod_charges` WHERE `country_id`='$countryId' AND `shipping_zone`='$shippingZone'");
         if ($existing->num_rows > 0) {
-            $conn->query("UPDATE `cod_charges` SET `benchmark_amount`='$benchmarkAmount', `cod_fee_below`='$codFeeBelow', `cod_fee_above`='$codFeeAbove', `updated_at`='$dateNow' WHERE `country_id`='$countryId'");
+            $conn->query("UPDATE `cod_charges` SET `benchmark_amount`='$benchmarkAmount', `cod_fee_below`='$codFeeBelow', `cod_fee_above`='$codFeeAbove', `updated_at`='$dateNow' WHERE `country_id`='$countryId' AND `shipping_zone`='$shippingZone'");
             $_SESSION['upload_success'] = 'COD charge updated successfully.';
         } else {
-            $conn->query("INSERT INTO `cod_charges` (`country_id`, `benchmark_amount`, `cod_fee_below`, `cod_fee_above`, `created_at`, `updated_at`) VALUES ('$countryId', '$benchmarkAmount', '$codFeeBelow', '$codFeeAbove', '$dateNow', '$dateNow')");
+            $conn->query("INSERT INTO `cod_charges` (`country_id`, `shipping_zone`, `benchmark_amount`, `cod_fee_below`, `cod_fee_above`, `created_at`, `updated_at`) VALUES ('$countryId', '$shippingZone', '$benchmarkAmount', '$codFeeBelow', '$codFeeAbove', '$dateNow', '$dateNow')");
             $_SESSION['upload_success'] = 'COD charge added successfully.';
         }
 
