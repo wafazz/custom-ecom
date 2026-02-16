@@ -1,10 +1,10 @@
 name: Validate & Deploy
 
-  on:
-    push:
-      branches: [main]
+on:
+  push:
+    branches: [main]
 
-  jobs:
+jobs:
     validate:
       runs-on: ubuntu-latest
       steps:
