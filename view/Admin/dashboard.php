@@ -8,7 +8,7 @@ include "01-menu.php";
 <!-- End Navbar -->
 <div class="container-fluid py-4">
   <div class="row">
-    <h6 class="mb-0">Welcome back
+    <h6 class="mb-0">Welcome back user
       <?= $_SESSION['user']->f_name . " " . $_SESSION['user']->l_name; ?>
     </h6>
   </div>
