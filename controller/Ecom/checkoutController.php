@@ -326,9 +326,9 @@ class CheckoutController
             $dataProduct = GetProductDetails($cartItem["p_id"]);
             //echo "Cart Item: " . $dataProduct["name"] . " | Quantity: " . $cartItem["quantity"] . "<br>";
             if ($x == 1) {
-                $product_var_id .= "[" . $cartItem["p_id"] . "]";
+                $product_var_id .= "[" . $cartItem["pv_id"] . "]";
             } else {
-                $product_var_id .= ",[" . $cartItem["p_id"] . "]";
+                $product_var_id .= ",[" . $cartItem["pv_id"] . "]";
             }
             $qty += $cartItem["quantity"];
             $tPrice += $cartItem["price"] * $cartItem["quantity"];
@@ -666,9 +666,9 @@ class CheckoutController
         foreach ($getCart as $cartItem) {
             $dataProduct = GetProductDetails($cartItem["p_id"]);
             if ($x == 1) {
-                $product_var_id .= "[" . $cartItem["p_id"] . "]";
+                $product_var_id .= "[" . $cartItem["pv_id"] . "]";
             } else {
-                $product_var_id .= ",[" . $cartItem["p_id"] . "]";
+                $product_var_id .= ",[" . $cartItem["pv_id"] . "]";
             }
             $qty += $cartItem["quantity"];
             $tPrice += $cartItem["price"] * $cartItem["quantity"];
@@ -899,9 +899,9 @@ class CheckoutController
         foreach ($getCart as $cartItem) {
             $dataProduct = GetProductDetails($cartItem["p_id"]);
             if ($x == 1) {
-                $product_var_id .= "[" . $cartItem["p_id"] . "]";
+                $product_var_id .= "[" . $cartItem["pv_id"] . "]";
             } else {
-                $product_var_id .= ",[" . $cartItem["p_id"] . "]";
+                $product_var_id .= ",[" . $cartItem["pv_id"] . "]";
             }
             $qty += $cartItem["quantity"];
             $tPrice += $cartItem["price"] * $cartItem["quantity"];
