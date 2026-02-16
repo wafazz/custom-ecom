@@ -7,9 +7,19 @@ require_once __DIR__ . '/../../config/mainConfig.php';
 
 class mainController
 {
+    private function checkRateLimit($maxAttempts = 60, $window = 60)
+    {
+        $ip = getUserIP();
+        if (!rate_limit("ratelimit:api:{$ip}", $maxAttempts, $window)) {
+            http_response_code(429);
+            echo json_encode(["message" => "Too many requests. Please try again later."]);
+            exit;
+        }
+    }
 
     public function login()
     {
+        $this->checkRateLimit(10, 60);
         header("Content-Type: application/json");
         header("Access-Control-Allow-Origin: *"); // Only for development. Use proper CORS settings in production.
         header("Access-Control-Allow-Methods: POST");

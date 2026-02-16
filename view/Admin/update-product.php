@@ -313,7 +313,7 @@ include "01-menu.php";
                 <div class="row mb-2 file-input-row" style="padding-left: 7px;
     padding-right: 7px;">
                   <?php
-                  while ($row = $country->fetch_array(MYSQLI_ASSOC)) {
+                  foreach ($country as $row) {
                     $cpp = allSaleCountryPrice($row["id"], $id);
                   ?>
                     <div class="col-md-3" style="padding: 5px 5px;

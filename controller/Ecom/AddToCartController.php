@@ -20,6 +20,14 @@ class AddToCartController
 
     public function addCart()
     {
+        $sessionId = $_SESSION['session_id'] ?? session_id();
+        if (!rate_limit("ratelimit:cart:{$sessionId}", 30, 60)) {
+            header("Content-Type: application/json");
+            http_response_code(429);
+            echo json_encode(["message" => "Too many requests. Please slow down."]);
+            return;
+        }
+
         if (isset($_COOKIE['country'])) {
             $country = $_COOKIE['country'];
         } else {
@@ -94,6 +102,7 @@ class AddToCartController
 
                 if ($newId) {
                     $this->cart->touchSession($session_id, $dateNow);
+                    invalidateCache_cart($session_id);
                     echo "success";
                 } else {
                     echo "Database error";
@@ -113,6 +122,7 @@ class AddToCartController
 
                 if ($updated) {
                     $this->cart->touchSession($session_id, $dateNow);
+                    invalidateCache_cart($session_id);
                     echo "success";
                 } else {
                     echo "Database error";

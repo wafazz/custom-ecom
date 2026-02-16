@@ -53,16 +53,19 @@ function activity($userid, $description, $table, $activity)
 
 function roleVerify($url, $id)
 {
-    $conn = getDbConnection();
-    $query = $conn->query("SELECT * FROM role_access WHERE page_url='$url' AND allowed_user LIKE '%[$id]%'");
+    $urlHash = md5($url);
+    return cache_remember("role:{$id}:{$urlHash}", 300, function() use ($url, $id) {
+        $conn = getDbConnection();
+        $query = $conn->query("SELECT * FROM role_access WHERE page_url='$url' AND allowed_user LIKE '%[$id]%'");
 
-    if ($query->num_rows > 0) {
-        $allowed = 1;
-    } else {
-        $allowed = 0;
-    }
+        if ($query->num_rows > 0) {
+            $allowed = 1;
+        } else {
+            $allowed = 0;
+        }
 
-    return $allowed;
+        return $allowed;
+    });
 }
 
 function calculatePostage($weightKg, $baseRate, $additionalRate)
@@ -85,11 +88,16 @@ function calculatePostage($weightKg, $baseRate, $additionalRate)
 
 function stateMalaysia()
 {
-    $conn = getDbConnection();
-    $sql = "SELECT * FROM `state` WHERE country_id='1' AND deleted_at IS NULL";
-
-    $result = $conn->query($sql);
-    return $result;
+    return cache_remember('states:malaysia', 3600, function() {
+        $conn = getDbConnection();
+        $sql = "SELECT * FROM `state` WHERE country_id='1' AND deleted_at IS NULL";
+        $result = $conn->query($sql);
+        $rows = [];
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+        return $rows;
+    });
 }
 
 function itemSold($id)
@@ -248,22 +256,24 @@ function validatePhoneNumber($phone)
 
 function cartCount()
 {
-    $conn = getDbConnection();
-    $sessionid = $_SESSION["session_id"];
-    $sql = "SELECT SUM(`quantity`) AS cartQTY FROM `cart` WHERE `session_id`='$sessionid'AND `deleted_at` IS NULL AND `status` IN(0,1)";
-    $query = $conn->query($sql);
-    $count = $query->fetch_assoc();
+    $sessionid = $_SESSION["session_id"] ?? '';
+    return cache_remember("cart:qty:{$sessionid}", 300, function() use ($sessionid) {
+        $conn = getDbConnection();
+        $sql = "SELECT SUM(`quantity`) AS cartQTY FROM `cart` WHERE `session_id`='$sessionid'AND `deleted_at` IS NULL AND `status` IN(0,1)";
+        $query = $conn->query($sql);
+        $count = $query->fetch_assoc();
 
-    if ($count["cartQTY"] >= "1") {
-        $theCount = $count["cartQTY"];
-    } else {
-        $theCount = 0;
-    }
+        if ($count["cartQTY"] >= "1") {
+            $theCount = $count["cartQTY"];
+        } else {
+            $theCount = 0;
+        }
 
-    $data = array(
-        "count" => $theCount
-    );
-    return ($data);
+        $data = array(
+            "count" => $theCount
+        );
+        return ($data);
+    });
 }
 
 function cartList()
@@ -280,36 +290,34 @@ function cartList()
 //ecom
 function getCategoryDetails($id)
 {
-    $conn = getDbConnection();
-
-    $sql = "SELECT * FROM categories WHERE id='$id'";
-
-
-    $query = $conn->query($sql);
-    $row = $query->fetch_array();
-    $data = array(
-        "name" => $row["name"],
-        "image" => $row["image"],
-        "description" => $row["description"]
-    );
-    return ($data);
+    return cache_remember("category:{$id}", 600, function() use ($id) {
+        $conn = getDbConnection();
+        $sql = "SELECT * FROM categories WHERE id='$id'";
+        $query = $conn->query($sql);
+        $row = $query->fetch_array();
+        $data = array(
+            "name" => $row["name"],
+            "image" => $row["image"],
+            "description" => $row["description"]
+        );
+        return ($data);
+    });
 }
 
 function getBrandDetails($id)
 {
-    $conn = getDbConnection();
-
-    $sql = "SELECT * FROM brands WHERE id='$id'";
-
-
-    $query = $conn->query($sql);
-    $row = $query->fetch_array();
-    $data = array(
-        "name" => $row["name"],
-        "image" => $row["image"],
-        "description" => $row["description"]
-    );
-    return ($data);
+    return cache_remember("brand:{$id}", 600, function() use ($id) {
+        $conn = getDbConnection();
+        $sql = "SELECT * FROM brands WHERE id='$id'";
+        $query = $conn->query($sql);
+        $row = $query->fetch_array();
+        $data = array(
+            "name" => $row["name"],
+            "image" => $row["image"],
+            "description" => $row["description"]
+        );
+        return ($data);
+    });
 }
 
 function stockBalanceIndividual($id)
@@ -972,6 +980,11 @@ function getCountryByIP($ip)
 
 function login($email, $password)
 {
+    $ip = getUserIP();
+    if (!rate_limit("ratelimit:login:{$ip}", 5, 900)) {
+        return "Too many login attempts. Please try again in 15 minutes.";
+    }
+
     $conn = getDbConnection();
 
     $stmt = $conn->prepare("SELECT id, email, password, f_name, l_name, role, status FROM member_hq WHERE email = ? AND deleted_at IS NULL LIMIT 1");
@@ -1215,19 +1228,32 @@ function stockBalanceByVariant($variantId)
 
 function getSelectOptions($selectedBrandId = null, $selectedCategoryId = null)
 {
-    $conn = getDbConnection();
+    $rawData = cache_remember('options:brands_cats', 600, function() {
+        $conn = getDbConnection();
+        $brands = [];
+        $categories = [];
 
+        $brandResult = mysqli_query($conn, "SELECT id, name FROM brands ORDER BY name ASC");
+        if ($brandResult) {
+            while ($row = mysqli_fetch_assoc($brandResult)) {
+                $brands[] = $row;
+            }
+        }
 
-    $output = [
-        'brands' => '',
-        'categories' => ''
-    ];
+        $categoryResult = mysqli_query($conn, "SELECT id, name FROM categories ORDER BY name ASC");
+        if ($categoryResult) {
+            while ($row = mysqli_fetch_assoc($categoryResult)) {
+                $categories[] = $row;
+            }
+        }
 
-    // Brands
-    $brandQuery = "SELECT id, name FROM brands ORDER BY name ASC";
-    $brandResult = mysqli_query($conn, $brandQuery);
-    if ($brandResult && mysqli_num_rows($brandResult) > 0) {
-        while ($row = mysqli_fetch_assoc($brandResult)) {
+        return ['brands' => $brands, 'categories' => $categories];
+    });
+
+    $output = ['brands' => '', 'categories' => ''];
+
+    if (!empty($rawData['brands'])) {
+        foreach ($rawData['brands'] as $row) {
             $selected = ($row['id'] == $selectedBrandId) ? ' selected' : '';
             $output['brands'] .= '<option value="' . htmlspecialchars($row['id']) . '"' . $selected . '>' . htmlspecialchars($row['name']) . '</option>' . PHP_EOL;
         }
@@ -1235,19 +1261,14 @@ function getSelectOptions($selectedBrandId = null, $selectedCategoryId = null)
         $output['brands'] = '<option disabled>No brands found</option>';
     }
 
-    // Categories
-    $categoryQuery = "SELECT id, name FROM categories ORDER BY name ASC";
-    $categoryResult = mysqli_query($conn, $categoryQuery);
-    if ($categoryResult && mysqli_num_rows($categoryResult) > 0) {
-        while ($row = mysqli_fetch_assoc($categoryResult)) {
+    if (!empty($rawData['categories'])) {
+        foreach ($rawData['categories'] as $row) {
             $selected = ($row['id'] == $selectedCategoryId) ? ' selected' : '';
             $output['categories'] .= '<option value="' . htmlspecialchars($row['id']) . '"' . $selected . '>' . htmlspecialchars($row['name']) . '</option>' . PHP_EOL;
         }
     } else {
         $output['categories'] = '<option disabled>No categories found</option>';
     }
-
-    mysqli_close($conn);
 
     return $output;
 }
@@ -1271,21 +1292,25 @@ function dataCountry($id)
 
 function allSaleCountry($productId = null)
 {
-    $conn = getDbConnection();
-
-    if ($productId !== null) {
-        $productId = mysqli_real_escape_string($conn, $productId);
-        $sql = "SELECT * FROM list_country WHERE product_id = '$productId' ORDER BY id ASC";
-    } else {
-        $sql = "SELECT * FROM list_country WHERE `status`='1' ORDER BY id ASC";
-    }
-    $result = $conn->query($sql);
-
-    if (!$result) {
-        die("Query failed: " . mysqli_error($conn));
-    }
-
-    return $result; // ✅ No row is fetched yet
+    $cacheKey = $productId !== null ? "countries:product:{$productId}" : "countries:all";
+    return cache_remember($cacheKey, 900, function() use ($productId) {
+        $conn = getDbConnection();
+        if ($productId !== null) {
+            $productId = mysqli_real_escape_string($conn, $productId);
+            $sql = "SELECT * FROM list_country WHERE product_id = '$productId' ORDER BY id ASC";
+        } else {
+            $sql = "SELECT * FROM list_country WHERE `status`='1' ORDER BY id ASC";
+        }
+        $result = $conn->query($sql);
+        if (!$result) {
+            return [];
+        }
+        $rows = [];
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+        return $rows;
+    });
 }
 
 function maskEmail($email)
@@ -2134,5 +2159,44 @@ function sendSecurityCode(string $toEmail, int $code): bool
     } catch (Exception $e) {
         error_log('Mail error: ' . $mail->ErrorInfo);
         return false;
+    }
+}
+
+function invalidateCache_category($id = null)
+{
+    if ($id) {
+        cache_delete("category:{$id}");
+    }
+    cache_delete('options:brands_cats');
+}
+
+function invalidateCache_brand($id = null)
+{
+    if ($id) {
+        cache_delete("brand:{$id}");
+    }
+    cache_delete('options:brands_cats');
+}
+
+function invalidateCache_country()
+{
+    cache_flush('countries:');
+}
+
+function invalidateCache_role($userId = null)
+{
+    if ($userId) {
+        cache_flush("role:{$userId}:");
+    } else {
+        cache_flush('role:');
+    }
+}
+
+function invalidateCache_cart($sessionId = null)
+{
+    if ($sessionId) {
+        cache_delete("cart:qty:{$sessionId}");
+    } else {
+        cache_flush('cart:qty:');
     }
 }

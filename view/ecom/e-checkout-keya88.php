@@ -401,7 +401,7 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
     width: 100% !important;" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                             <option value="" <?= isset($_POST["nextCheckout"]) ? '' : 'selected'; ?> disabled>select state</option>
                                             <?php
-                                            while ($rowstate = $myState->fetch_array()) {
+                                            foreach ($myState as $rowstate) {
 
                                                 if ($_SESSION["state"] == $rowstate["name"]) {
                                             ?>

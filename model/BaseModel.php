@@ -11,9 +11,6 @@ abstract class BaseModel
         $this->conn = $conn ?: getDbConnection();
     }
 
-    /**
-     * Find a single record by primary key.
-     */
     public function find(int $id): ?array
     {
         $sql = "SELECT * FROM `{$this->table}` WHERE `{$this->primaryKey}` = ? LIMIT 1";
@@ -24,6 +21,19 @@ abstract class BaseModel
         $row = $result->fetch_assoc();
         $stmt->close();
         return $row ?: null;
+    }
+
+    public function findCached(int $id, int $ttl = 300): ?array
+    {
+        $key = "{$this->table}:{$id}";
+        return cache_remember($key, $ttl, function() use ($id) {
+            return $this->find($id);
+        });
+    }
+
+    public function invalidateCache(int $id): void
+    {
+        cache_delete("{$this->table}:{$id}");
     }
 
     /**
@@ -145,6 +155,9 @@ abstract class BaseModel
         $stmt->bind_param($types, ...$values);
         $success = $stmt->execute();
         $stmt->close();
+        if ($success) {
+            $this->invalidateCache($id);
+        }
         return $success;
     }
 
@@ -159,6 +172,9 @@ abstract class BaseModel
         $stmt->bind_param("si", $now, $id);
         $success = $stmt->execute();
         $stmt->close();
+        if ($success) {
+            $this->invalidateCache($id);
+        }
         return $success;
     }
 

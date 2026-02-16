@@ -254,7 +254,7 @@ include "01-menu.php";
               <div class="form-group">
                 <div class="row mb-2 file-input-row" style="padding-left: 7px;
     padding-right: 7px;">
-                  <?php while ($row = $country->fetch_array(MYSQLI_ASSOC)) { ?>
+                  <?php foreach ($country as $row) { ?>
                     <div class="col-md-3" style="padding: 5px 5px;
     border-radius: 5px;">
                       <div style="border: 1px solid #ddd;

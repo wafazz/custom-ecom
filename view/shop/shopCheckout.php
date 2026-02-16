@@ -170,7 +170,7 @@
                                 <select class="form-control" required id="selectcountry" name="s_country">
                                     <option value="">select country</option>
                                     <?php
-                                        while($countrys = $country->fetch_array()){
+                                        foreach($country as $countrys){
                                             ?>
                                             <option value="<?= $countrys["country_name"]; ?>" data-id="<?= $countrys["id"]; ?>"><?= $countrys["country_name"]; ?></option>
                                             <?php
