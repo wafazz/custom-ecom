@@ -141,12 +141,19 @@
         </div>
 
         <h1>Thank You!</h1>
-        <p>Your payment has been received successfully.</p>
-
-        <div class="info-box">
-            We’re processing your order.<br>
-            A confirmation email will be sent to you shortly.
-        </div>
+        <?php if (isset($isCOD) && $isCOD): ?>
+            <p>Your order has been placed successfully via Cash on Delivery (COD).</p>
+            <div class="info-box">
+                Please prepare the exact amount upon delivery.<br>
+                A confirmation email will be sent to you shortly.
+            </div>
+        <?php else: ?>
+            <p>Your payment has been received successfully.</p>
+            <div class="info-box">
+                We're processing your order.<br>
+                A confirmation email will be sent to you shortly.
+            </div>
+        <?php endif; ?>
 
         <div class="btn-group">
             <!-- Replace with your retry URL -->

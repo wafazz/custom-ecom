@@ -466,10 +466,37 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                 }
                                 ?>
 
-                                <!-- <span onclick="window.location.href='<?= $domainURL ?>proceed-payment'" class="btn btn-info"><img src="https://app.senangpay.my/public/images/UPD-btn-pay-solid.png"></span> -->
-                                <p>By clicking "<b>Pay Now</b>" button below, you're agree to our "PURCHASE" terms and conditions.</p>
-                                <a href="<?= $domainURL ?>proceed-payment" class="site-btns">Pay Now (SenangPay)</a>
-                                <a href="<?= $domainURL ?>proceed-bayarcash" class="site-btns" style="background:#1a73e8; margin-top:10px;">Pay Now (Bayarcash)</a>
+                                <!-- Delivery Method Selection -->
+                                <p style="font-weight:bold; margin-bottom:8px;">Delivery Method</p>
+                                <div style="margin-bottom:15px;">
+                                    <label style="display:block; padding:10px; border:2px solid #4f46e5; border-radius:8px; margin-bottom:8px; cursor:pointer; background:#f8f7ff;">
+                                        <input type="radio" name="delivery_method" value="postage" checked onchange="togglePaymentButtons()"> Normal Postage (<?= $currency_sign ?> <?= number_format($postageCharge, 2) ?>)
+                                    </label>
+                                    <label style="display:block; padding:10px; border:2px solid #28a745; border-radius:8px; cursor:pointer; background:#f0fff4;">
+                                        <input type="radio" name="delivery_method" value="cod" onchange="togglePaymentButtons()"> Cash on Delivery (COD)
+                                    </label>
+                                </div>
+
+                                <!-- Payment buttons (shown for Normal Postage) -->
+                                <div id="payment-buttons">
+                                    <p>By clicking "<b>Pay Now</b>" button below, you're agree to our "PURCHASE" terms and conditions.</p>
+                                    <a href="<?= $domainURL ?>proceed-payment" class="site-btns">Pay Now (SenangPay)</a>
+                                    <a href="<?= $domainURL ?>proceed-bayarcash" class="site-btns" style="background:#1a73e8; margin-top:10px;">Pay Now (Bayarcash)</a>
+                                </div>
+
+                                <!-- COD button (shown for COD) -->
+                                <div id="cod-button" style="display:none;">
+                                    <p>Your order will be placed and you will pay upon delivery.</p>
+                                    <a href="<?= $domainURL ?>proceed-cod" class="site-btns" style="background:#28a745;">Place Order (COD)</a>
+                                </div>
+
+                                <script>
+                                function togglePaymentButtons() {
+                                    var method = document.querySelector('input[name="delivery_method"]:checked').value;
+                                    document.getElementById('payment-buttons').style.display = method === 'postage' ? 'block' : 'none';
+                                    document.getElementById('cod-button').style.display = method === 'cod' ? 'block' : 'none';
+                                }
+                                </script>
 
                                 <!-- <p style="font-weight:bold;color:red;">Note: For end user please dont use SenangPay above for payment. Now we in the middle of running/conducting testing issues. End user, Please use payment below for make payment.</p> -->
                                 <!-- <p style="font-weight:bold;color:green;">Note: For FPX Payment & E-Wallet (T&G, Boost, GrabPay, ShopeePay) please use SenangPay above.</p>

@@ -860,6 +860,190 @@ class CheckoutController
         }
     }
 
+    public function proceedCOD()
+    {
+        if (isset($_COOKIE['country'])) {
+            $country = $_COOKIE['country'];
+        } else {
+            header("Location: /");
+            exit;
+        }
+        $domainURL = getMainUrl();
+        $conn = getDbConnection();
+        $data = dataCountry($country);
+        $dateNow = dateNow();
+
+        if (!isset($_SESSION["session_id"]) || empty($_SESSION["session_id"])) {
+            header("Location: " . $domainURL . "checkout");
+            exit();
+        }
+
+        $getCart = $conn->query("SELECT * FROM `cart` WHERE `session_id`='" . $_SESSION["session_id"] . "' AND `deleted_at` IS NULL AND `status` IN(0,1)");
+
+        if ($getCart->num_rows < 1) {
+            header("Location: " . $domainURL . "checkout");
+            exit();
+        }
+
+        if ((!isset($_SESSION["fname"]) || empty($_SESSION["fname"])) && (!isset($_SESSION["lname"]) || empty($_SESSION["lname"])) && (!isset($_SESSION["add_1"]) || empty($_SESSION["add_1"])) && (!isset($_SESSION["postcode"]) || empty($_SESSION["postcode"]))) {
+            header("Location: " . $domainURL . "checkout");
+            exit();
+        }
+
+        $softDeleteLock = $conn->query("UPDATE `cart_lock_senangpay` SET `deleted_at`= '$dateNow' WHERE `session_id`='" . $_SESSION["session_id"] . "'");
+
+        $x = 1;
+        $product_var_id = "";
+        $qty = 0;
+        $tPrice = 0;
+        foreach ($getCart as $cartItem) {
+            $dataProduct = GetProductDetails($cartItem["p_id"]);
+            if ($x == 1) {
+                $product_var_id .= "[" . $cartItem["p_id"] . "]";
+            } else {
+                $product_var_id .= ",[" . $cartItem["p_id"] . "]";
+            }
+            $qty += $cartItem["quantity"];
+            $tPrice += $cartItem["price"] * $cartItem["quantity"];
+
+            $getCartLock = $conn->query("SELECT * FROM `cart_lock_senangpay` WHERE `cart_id`='" . $cartItem["id"] . "' AND `session_id`='" . $_SESSION["session_id"] . "'");
+            if ($getCartLock->num_rows > 0) {
+                $dataLock = $getCartLock->fetch_array();
+                $conn->query("UPDATE `cart_lock_senangpay` SET `quantity`='" . $cartItem["quantity"] . "', `price`='" . $cartItem["price"] . "', `weight`='" . $cartItem["weight"] . "', `total_weight`='" . $cartItem["total_weight"] . "', `updated_at`='$dateNow', `locked_date`= '$dateNow', `deleted_at`= NULL WHERE `id`='" . $dataLock["id"] . "'");
+            } else {
+                $conn->query("INSERT INTO `cart_lock_senangpay`(`id`, `cart_id`, `session_id`, `p_id`, `pv_id`, `quantity`, `price`, `weight`, `total_weight`, `currency_sign`, `country_id`, `created_at`, `updated_at`, `locked_date`, `deleted_at`, `status`) VALUES (NULL,'" . $cartItem["id"] . "','" . $_SESSION["session_id"] . "','" . $cartItem["p_id"] . "','" . $cartItem["pv_id"] . "','" . $cartItem["quantity"] . "','" . $cartItem["price"] . "','" . $cartItem["weight"] . "','" . $cartItem["total_weight"] . "','" . $cartItem["currency_sign"] . "','" . $cartItem["country_id"] . "','$dateNow','$dateNow', '$dateNow', NULL, '0')");
+            }
+            $x++;
+        }
+
+        $subTotal = $_SESSION["subTotal"];
+
+        $codOrder = $conn->query("INSERT INTO customer_orders (
+                `id`,
+                `session_id`,
+                `order_to`,
+                `product_var_id`,
+                `total_qty`,
+                `total_price`,
+                `postage_cost`,
+                `currency_sign`,
+                `country_id`,
+                `country`,
+                `state`,
+                `city`,
+                `postcode`,
+                `address_2`,
+                `address_1`,
+                `customer_name`,
+                `customer_name_last`,
+                `customer_phone`,
+                `customer_email`,
+                `status`,
+                `payment_channel`,
+                `payment_code`,
+                `payment_url`,
+                `ship_channel`,
+                `courier_service`,
+                `awb_number`,
+                `tracking_url`,
+                `created_at`,
+                `updated_at`,
+                `deleted_at`,
+                `remark_comment`,
+                `tracking_milestone`,
+                `to_myr_rate`,
+                `myr_value_include_postage`,
+                `myr_value_without_postage`,
+                `printed_awb`
+            ) VALUES(
+                NULL,
+                '" . $_SESSION["session_id"] . "',
+                '1',
+                '$product_var_id',
+                '$qty',
+                '$tPrice',
+                '" . $_SESSION["postageCharge"] . "',
+                '" . $data["sign"] . "',
+                '$country',
+                '" . $data["name"] . "',
+                '" . $_SESSION["state"] . "',
+                '" . $_SESSION["city"] . "',
+                '" . $_SESSION["postcode"] . "',
+                '" . $_SESSION["add_2"] . "',
+                '" . $_SESSION["add_1"] . "',
+                '" . $_SESSION["fname"] . "',
+                '" . $_SESSION["lname"] . "',
+                '" . $_SESSION["ophone"] . "',
+                '" . $_SESSION["oemail"] . "',
+                '1',
+                'COD',
+                'COD',
+                'COD',
+                'Doorstep Delivery',
+                '',
+                '',
+                '',
+                '$dateNow',
+                '$dateNow',
+                NULL,
+                '" . $_SESSION["remark"] . "',
+                '',
+                '1',
+                '$subTotal',
+                '$tPrice',
+                '0'
+            )");
+
+        if ($codOrder) {
+            $codOrderId = $conn->insert_id;
+
+            $getCartLock = $conn->query("SELECT * FROM `cart_lock_senangpay` WHERE `session_id`='" . $_SESSION["session_id"] . "' AND deleted_at IS NULL");
+            foreach ($getCartLock as $cartLockItem) {
+                $conn->query("UPDATE `cart` SET `updated_at`='$dateNow', `deleted_at`=NULL, `status`='1' WHERE `id`='" . $cartLockItem["cart_id"] . "'");
+            }
+
+            $hashOrder = hash("sha256", $codOrderId . "_" . $_SESSION["fname"] . "_" . $dateNow);
+            $conn->query("INSERT INTO order_details(order_id, hash_code, created_at) VALUES ('$codOrderId','$hashOrder','$dateNow')");
+
+            $emailData = [
+                'CustomerName' => $_SESSION["fname"],
+                'OrderID'      => $codOrderId,
+                'OrderLink'    => $domainURL . "order-details/" . $hashOrder,
+            ];
+
+            $emailHTML = getEmailTemplate($emailData);
+
+            $mail = new PHPMailer(true);
+            try {
+                $mail->isSMTP();
+                $mail->Host       = 'smtp-relay.brevo.com';
+                $mail->SMTPAuth   = true;
+                $mail->Username   = '889d41001@smtp-brevo.com';
+                $mail->Password   = 'xsmtpsib-XXXXXXXXXXXXXXXXXXXX';
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port       = 587;
+
+                $mail->setFrom('orders-noreply@rozeyana.com', 'Rozeyana.com');
+                $mail->addAddress($_SESSION["oemail"], $_SESSION["fname"]);
+                $mail->isHTML(true);
+                $mail->Subject = 'Your Order Confirmation (COD) - Rozeyana';
+                $mail->Body    = $emailHTML;
+                $mail->AltBody = 'Thank you for your order #' . $codOrderId . '. View: ' . $domainURL . 'order-details/' . $hashOrder;
+
+                $mail->send();
+            } catch (Exception $e) {
+                error_log("Mail error: {$mail->ErrorInfo}");
+            }
+
+            unset($_SESSION["session_id"]);
+
+            $isCOD = true;
+            $getOrder = $conn->query("SELECT * FROM `order_details` WHERE `order_id`='" . $codOrderId . "'")->fetch_assoc();
+            require_once __DIR__ . '/../../view/ecom/e-senangpay-thank-you-keya88.php';
+            exit();
+        }
+    }
+
     public function thankYouBayarcash()
     {
         if (isset($_COOKIE['country'])) {

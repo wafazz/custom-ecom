@@ -159,6 +159,7 @@ $routes = [
 
         //bayarcash
         '/proceed-bayarcash' => 'Ecom\checkoutController@proceedPaymentBayarcash',
+        '/proceed-cod' => 'Ecom\checkoutController@proceedCOD',
         '/bayarcash-thank-you' => 'Ecom\checkoutController@thankYouBayarcash'
 
     ],
