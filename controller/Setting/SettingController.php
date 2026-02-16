@@ -298,21 +298,25 @@ class SettingController
         $dateNow = dateNow();
 
         $countryId = $_POST["country_id"] ?? "";
-        $minAmount = $_POST["min_amount"] ?? "0";
-        $maxAmount = $_POST["max_amount"] ?? "";
-        $codFee = $_POST["cod_fee"] ?? "0";
+        $benchmarkAmount = $_POST["benchmark_amount"] ?? "0";
+        $codFeeBelow = $_POST["cod_fee_below"] ?? "0";
+        $codFeeAbove = $_POST["cod_fee_above"] ?? "0";
 
-        if (empty($countryId) || $codFee === "") {
+        if (empty($countryId)) {
             $_SESSION['upload_success'] = 'Please fill in all required fields.';
             header("Location: " . getMainUrl() . "delivery-charge");
             return;
         }
 
-        $maxVal = !empty($maxAmount) ? "'$maxAmount'" : "NULL";
+        $existing = $conn->query("SELECT * FROM `cod_charges` WHERE `country_id`='$countryId'");
+        if ($existing->num_rows > 0) {
+            $conn->query("UPDATE `cod_charges` SET `benchmark_amount`='$benchmarkAmount', `cod_fee_below`='$codFeeBelow', `cod_fee_above`='$codFeeAbove', `updated_at`='$dateNow' WHERE `country_id`='$countryId'");
+            $_SESSION['upload_success'] = 'COD charge updated successfully.';
+        } else {
+            $conn->query("INSERT INTO `cod_charges` (`country_id`, `benchmark_amount`, `cod_fee_below`, `cod_fee_above`, `created_at`, `updated_at`) VALUES ('$countryId', '$benchmarkAmount', '$codFeeBelow', '$codFeeAbove', '$dateNow', '$dateNow')");
+            $_SESSION['upload_success'] = 'COD charge added successfully.';
+        }
 
-        $conn->query("INSERT INTO `cod_charges` (`country_id`, `min_amount`, `max_amount`, `cod_fee`, `created_at`, `updated_at`) VALUES ('$countryId', '$minAmount', $maxVal, '$codFee', '$dateNow', '$dateNow')");
-
-        $_SESSION['upload_success'] = 'COD charge added successfully.';
         header("Location: " . getMainUrl() . "delivery-charge");
     }
 

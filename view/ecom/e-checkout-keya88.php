@@ -188,12 +188,16 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                 $subTotal = $subTotals + $postageCharge;
                                 $_SESSION["subTotal"] = $subTotal;
 
-                                // Lookup COD fee for this country & order amount
+                                // Lookup COD fee based on benchmark
                                 $codFee = 0;
-                                $codFeeResult = $conn->query("SELECT * FROM `cod_charges` WHERE `country_id`='$country' AND `min_amount` <= '$subTotals' AND (`max_amount` >= '$subTotals' OR `max_amount` IS NULL) ORDER BY `min_amount` DESC LIMIT 1");
+                                $codFeeResult = $conn->query("SELECT * FROM `cod_charges` WHERE `country_id`='$country' LIMIT 1");
                                 if ($codFeeResult && $codFeeResult->num_rows > 0) {
                                     $codFeeRow = $codFeeResult->fetch_array();
-                                    $codFee = $codFeeRow["cod_fee"];
+                                    if ($subTotals < $codFeeRow["benchmark_amount"]) {
+                                        $codFee = $codFeeRow["cod_fee_below"];
+                                    } else {
+                                        $codFee = $codFeeRow["cod_fee_above"];
+                                    }
                                 }
                                 $_SESSION["codFee"] = $codFee;
                                 $subTotalWithCod = $subTotal + $codFee;

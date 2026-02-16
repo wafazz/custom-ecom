@@ -104,36 +104,35 @@ include "01-menu.php";
                     <div class="row">
                         <div class="col-lg-6 col-7">
                             <h6>COD Charges (Benchmark)</h6>
+                            <p class="text-xs text-secondary mb-0">If sales &lt; benchmark amount → charge COD Fee 1 | If sales &gt;= benchmark amount → charge COD Fee 2</p>
                         </div>
                     </div>
                 </div>
                 <div class="card-body px-0 pb-2">
-                    <button class="open-btn" onclick="openCodModal()">Add New COD Charge</button>
+                    <button class="open-btn" onclick="openCodModal()">Add / Update COD Charge</button>
 
                     <div style="display:block; margin:0 20px 20px; overflow-x:auto;">
                         <table id="codTable" class="display" style="width:100%">
                             <thead>
                                 <tr>
-                                    <th class="text-center">#</th>
                                     <th class="text-center">Country</th>
-                                    <th class="text-center">Min Amount</th>
-                                    <th class="text-center">Max Amount</th>
-                                    <th class="text-center">COD Fee</th>
+                                    <th class="text-center">Benchmark Amount</th>
+                                    <th class="text-center">COD Fee (Below)</th>
+                                    <th class="text-center">COD Fee (Above/Equal)</th>
                                     <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php
-                                $codResult = $conn->query("SELECT * FROM `cod_charges` ORDER BY country_id ASC, min_amount ASC");
+                                $codResult = $conn->query("SELECT * FROM `cod_charges` ORDER BY country_id ASC");
                                 while ($codRow = $codResult->fetch_array()) {
                                     $codCountry = getCountryP($codRow["country_id"]);
                                 ?>
                                     <tr>
-                                        <td class="text-center"><?= $codRow["id"] ?></td>
                                         <td class="text-center"><?= $codCountry["name"] ?></td>
-                                        <td class="text-center"><?= $codCountry["sign"] ?> <?= number_format($codRow["min_amount"], 2) ?></td>
-                                        <td class="text-center"><?= $codRow["max_amount"] ? $codCountry["sign"] . ' ' . number_format($codRow["max_amount"], 2) : 'No Limit' ?></td>
-                                        <td class="text-center"><?= $codCountry["sign"] ?> <?= number_format($codRow["cod_fee"], 2) ?></td>
+                                        <td class="text-center"><?= $codCountry["sign"] ?> <?= number_format($codRow["benchmark_amount"], 2) ?></td>
+                                        <td class="text-center"><?= $codCountry["sign"] ?> <?= number_format($codRow["cod_fee_below"], 2) ?></td>
+                                        <td class="text-center"><?= $codCountry["sign"] ?> <?= number_format($codRow["cod_fee_above"], 2) ?></td>
                                         <td class="text-center">
                                             <a href="<?= $domainURL ?>delete-cod-charge/<?= $codRow["id"] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this COD charge?')">Delete</a>
                                         </td>
@@ -159,7 +158,7 @@ include "01-menu.php";
     <div id="codModal" class="modal" style="display:none;">
         <div class="modal-content">
             <span class="close-btn" onclick="document.getElementById('codModal').style.display='none'">&times;</span>
-            <h4>Add COD Charge</h4>
+            <h4>Add / Update COD Charge</h4>
             <form class="popup-form" action="<?= $domainURL ?>save-cod-charge" method="post">
                 Country
                 <select name="country_id" class="form-control" required style="margin-bottom:15px;" id="codCountrySelect">
@@ -174,14 +173,14 @@ include "01-menu.php";
                     ?>
                 </select>
 
-                Min Order Amount (<span id="codCurs1">RM</span>)
-                <input type="number" class="form-control" name="min_amount" min="0" step="0.01" placeholder="e.g. 0.00" required style="margin-bottom:15px;">
+                Benchmark Amount (<span id="codCurs1">RM</span>)
+                <input type="number" class="form-control" name="benchmark_amount" min="0" step="0.01" placeholder="e.g. 100.00" required style="margin-bottom:15px;">
 
-                Max Order Amount (<span id="codCurs2">RM</span>) <small style="color:#888;">Leave empty for no upper limit</small>
-                <input type="number" class="form-control" name="max_amount" min="0" step="0.01" placeholder="e.g. 100.00" style="margin-bottom:15px;">
+                COD Fee if sales &lt; benchmark (<span id="codCurs2">RM</span>)
+                <input type="number" class="form-control" name="cod_fee_below" min="0" step="0.01" placeholder="e.g. 10.00" required style="margin-bottom:15px;">
 
-                COD Fee (<span id="codCurs3">RM</span>)
-                <input type="number" class="form-control" name="cod_fee" min="0" step="0.01" placeholder="e.g. 10.00" required style="margin-bottom:15px;">
+                COD Fee if sales &gt;= benchmark (<span id="codCurs3">RM</span>)
+                <input type="number" class="form-control" name="cod_fee_above" min="0" step="0.01" placeholder="e.g. 8.00" required style="margin-bottom:15px;">
 
                 <button class="btn btn-primary" type="submit">Save</button>
             </form>
