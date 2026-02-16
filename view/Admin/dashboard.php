@@ -84,41 +84,7 @@ include "01-menu.php";
             </div>
           </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-12 mt-4 mt-md-0">
-          <div class="card">
-            <span class="mask bg-info opacity-10 border-radius-lg"></span>
-            <div class="card-body p-3 position-relative">
-              <div class="row">
-                <div class="col-8 text-start">
-                  <div class="icon icon-shape bg-white shadow text-center border-radius-2xl">
-                    <i class="fa-solid fa-circle-dollar-to-slot text-dark text-gradient text-lg opacity-10"
-                      aria-hidden="true"></i>
-                  </div>
-                  <h5 class="text-white font-weight-bolder mb-0 mt-3">
-                    RM
-                    <!-- <?= totalSales() ?> -->
-                    <span id="totalSales">0.00</span>
-                  </h5>
-                  <span class="text-white text-sm">Total Sales</span>
-                </div>
-                <div class="col-4">
-                  <div class="dropdown text-end mb-6">
-                    <a href="javascript:;" class="cursor-pointer" id="dropdownUsers3" data-bs-toggle="dropdown"
-                      aria-expanded="false">
-                      <i class="fa fa-ellipsis-h text-white"></i>
-                    </a>
-                    <ul class="dropdown-menu px-2 py-3" aria-labelledby="dropdownUsers3">
-                      <li><a class="dropdown-item border-radius-md" href="javascript:;">Action</a></li>
-                      <li><a class="dropdown-item border-radius-md" href="javascript:;">Another action</a></li>
-                      <li><a class="dropdown-item border-radius-md" href="javascript:;">Something else here</a></li>
-                    </ul>
-                  </div>
-                  <p class="text-white text-sm text-end font-weight-bolder mt-auto mb-0">+15%</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+
         <div class="col-lg-3 col-md-6 col-12 mt-4 mt-md-0">
           <div class="card">
             <span class="mask bg-info opacity-10 border-radius-lg"></span>
@@ -153,6 +119,41 @@ include "01-menu.php";
           </div>
         </div>
         <div class="row" style="margin-top: 20px !important;">
+          <div class="col-lg-4 col-md-6 col-12 mt-4 mt-md-0">
+            <div class="card">
+              <span class="mask bg-info opacity-10 border-radius-lg"></span>
+              <div class="card-body p-3 position-relative">
+                <div class="row">
+                  <div class="col-8 text-start">
+                    <div class="icon icon-shape bg-white shadow text-center border-radius-2xl">
+                      <i class="fa-solid fa-circle-dollar-to-slot text-dark text-gradient text-lg opacity-10"
+                        aria-hidden="true"></i>
+                    </div>
+                    <h5 class="text-white font-weight-bolder mb-0 mt-3">
+                      RM
+                      <!-- <?= totalSales() ?> -->
+                      <span id="totalSales">0.00</span>
+                    </h5>
+                    <span class="text-white text-sm">Total Sales</span>
+                  </div>
+                  <div class="col-4">
+                    <div class="dropdown text-end mb-6">
+                      <a href="javascript:;" class="cursor-pointer" id="dropdownUsers3" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="fa fa-ellipsis-h text-white"></i>
+                      </a>
+                      <ul class="dropdown-menu px-2 py-3" aria-labelledby="dropdownUsers3">
+                        <li><a class="dropdown-item border-radius-md" href="javascript:;">Action</a></li>
+                        <li><a class="dropdown-item border-radius-md" href="javascript:;">Another action</a></li>
+                        <li><a class="dropdown-item border-radius-md" href="javascript:;">Something else here</a></li>
+                      </ul>
+                    </div>
+                    <p class="text-white text-sm text-end font-weight-bolder mt-auto mb-0">+15%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="col-lg-6 col-md-6 col-12 mt-4 mt-md-0">
             <div class="card">
               <span class="mask bg-info opacity-10 border-radius-lg"></span>
