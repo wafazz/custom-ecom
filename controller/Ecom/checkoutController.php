@@ -916,7 +916,8 @@ class CheckoutController
             $x++;
         }
 
-        $subTotal = $_SESSION["subTotal"];
+        $codFee = isset($_SESSION["codFee"]) ? $_SESSION["codFee"] : 0;
+        $subTotal = $_SESSION["subTotal"] + $codFee;
 
         $codOrder = $conn->query("INSERT INTO customer_orders (
                 `id`,
@@ -979,7 +980,7 @@ class CheckoutController
                 'COD',
                 'COD',
                 'COD',
-                'Doorstep Delivery',
+                'COD',
                 '',
                 '',
                 '',

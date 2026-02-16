@@ -187,18 +187,39 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
 
                                 $subTotal = $subTotals + $postageCharge;
                                 $_SESSION["subTotal"] = $subTotal;
+
+                                // Lookup COD fee for this country & order amount
+                                $codFee = 0;
+                                $codFeeResult = $conn->query("SELECT * FROM `cod_charges` WHERE `country_id`='$country' AND `min_amount` <= '$subTotals' AND (`max_amount` >= '$subTotals' OR `max_amount` IS NULL) ORDER BY `min_amount` DESC LIMIT 1");
+                                if ($codFeeResult && $codFeeResult->num_rows > 0) {
+                                    $codFeeRow = $codFeeResult->fetch_array();
+                                    $codFee = $codFeeRow["cod_fee"];
+                                }
+                                $_SESSION["codFee"] = $codFee;
+                                $subTotalWithCod = $subTotal + $codFee;
+                                $_SESSION["subTotalWithCod"] = $subTotalWithCod;
                                 ?>
 
-
+                                <tr id="cod-fee-row" style="display:none;">
+                                    <td class="cart__product__item" colspan="2" style="text-align: right !important"><b></b>
+                                    </td>
+                                    <td class="cart__product__item" style="text-align: left !important"><b>COD Fee</b>
+                                    </td>
+                                    <td class="cart__product__item" style="font-weight:bolder;text-align:right;">
+                                        <?= $currency_sign ?>
+                                        <?= number_format($codFee, 2) ?>
+                                    </td>
+                                    <td class="cart__close"></td>
+                                </tr>
 
                                 <tr>
                                     <td class="cart__product__item" colspan="2" style="text-align: right !important"><b></b>
                                     </td>
                                     <td class="cart__product__item" style="text-align: left !important"><b>Total to Pay</b>
                                     </td>
-                                    <td class="cart__product__item" style="font-weight:bolder;text-align:right;">
+                                    <td class="cart__product__item" style="font-weight:bolder;text-align:right;" id="total-to-pay">
                                         <?= $currency_sign ?>
-                                        <?= number_format($subTotal, 2) ?>
+                                        <span id="total-amount"><?= number_format($subTotal, 2) ?></span>
                                     </td>
 
                                     <td class="cart__close"></td>
@@ -491,10 +512,16 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                 </div>
 
                                 <script>
+                                var normalTotal = <?= $subTotal ?>;
+                                var codTotal = <?= $subTotalWithCod ?>;
                                 function togglePaymentButtons() {
                                     var method = document.querySelector('input[name="delivery_method"]:checked').value;
                                     document.getElementById('payment-buttons').style.display = method === 'postage' ? 'block' : 'none';
                                     document.getElementById('cod-button').style.display = method === 'cod' ? 'block' : 'none';
+                                    var codRow = document.getElementById('cod-fee-row');
+                                    if (codRow) codRow.style.display = method === 'cod' ? '' : 'none';
+                                    var totalEl = document.getElementById('total-amount');
+                                    if (totalEl) totalEl.innerText = (method === 'cod' ? codTotal : normalTotal).toFixed(2);
                                 }
                                 </script>
 

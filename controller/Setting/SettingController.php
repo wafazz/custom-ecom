@@ -292,6 +292,39 @@ class SettingController
         header("Location: {$this->domainURL}delivery-charge");
     }
 
+    public function saveCodCharge()
+    {
+        $conn = getDbConnection();
+        $dateNow = dateNow();
+
+        $countryId = $_POST["country_id"] ?? "";
+        $minAmount = $_POST["min_amount"] ?? "0";
+        $maxAmount = $_POST["max_amount"] ?? "";
+        $codFee = $_POST["cod_fee"] ?? "0";
+
+        if (empty($countryId) || $codFee === "") {
+            $_SESSION['upload_success'] = 'Please fill in all required fields.';
+            header("Location: " . getMainUrl() . "delivery-charge");
+            return;
+        }
+
+        $maxVal = !empty($maxAmount) ? "'$maxAmount'" : "NULL";
+
+        $conn->query("INSERT INTO `cod_charges` (`country_id`, `min_amount`, `max_amount`, `cod_fee`, `created_at`, `updated_at`) VALUES ('$countryId', '$minAmount', $maxVal, '$codFee', '$dateNow', '$dateNow')");
+
+        $_SESSION['upload_success'] = 'COD charge added successfully.';
+        header("Location: " . getMainUrl() . "delivery-charge");
+    }
+
+    public function deleteCodCharge($id)
+    {
+        $conn = getDbConnection();
+        $conn->query("DELETE FROM `cod_charges` WHERE `id`='$id'");
+
+        $_SESSION['upload_success'] = 'COD charge deleted.';
+        header("Location: " . getMainUrl() . "delivery-charge");
+    }
+
     public function indexAnnouncement()
     {
         $domainURL = getMainUrl();
