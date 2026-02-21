@@ -50,7 +50,7 @@ include "01-menu.php";
                                     <label>Country</label>
                                     <select class="form-control" name="country" id="country" required>
                                         <option value="" selected disabled>-- Select Country --</option>
-                                        <?php while ($row1 = $result1->fetch_assoc()) {
+                                        <?php foreach ($result1 as $row1) {
                                             $disabled = in_array($row1["name"], $savedCountryNames) ? 'disabled' : '';
                                             ?>
                                             <option value="<?= $row1["name"] ?>" data-phone="<?= $row1["phone_code"] ?>"

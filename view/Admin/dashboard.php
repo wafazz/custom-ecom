@@ -253,8 +253,8 @@ include "01-menu.php";
         <div class="card-body p-3" style="max-height:600px;overflow-y:auto;">
           <div class="timeline timeline-one-side">
             <?php
-            if ($result->num_rows > 0) {
-              while ($row = $result->fetch_assoc()) {
+            if (!empty($result)) {
+              foreach ($result as $row) {
             ?>
                 <div class="timeline-block mb-3">
                   <span class="timeline-step">

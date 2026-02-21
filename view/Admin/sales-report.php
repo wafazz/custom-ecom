@@ -385,9 +385,8 @@ include "01-menu.php";
                                         </thead>
                                         <tbody>
                                             <?php
-                                            $hasData = false;
-                                            while ($row = mysqli_fetch_assoc($result)) {
-                                                $hasData = true;
+                                            $hasData = !empty($result);
+                                            foreach ($result as $row) {
                                                 // Determine status class
                                                 $statusClass = 'status-pending';
                                                 $statusLower = strtolower($row['status']);

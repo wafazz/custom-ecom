@@ -3,66 +3,48 @@
 namespace Member;
 
 require_once __DIR__ . '/../../config/mainConfig.php';
+require_once __DIR__ . '/../../model/Order.php';
+require_once __DIR__ . '/../../model/MemberHq.php';
+require_once __DIR__ . '/../../model/Activity.php';
 
 class MemberController
 {
+    private $conn;
+    private $orderModel;
+    private $memberModel;
+    private $activityModel;
 
     public function __construct()
     {
-        // This runs automatically when the controller is instantiated
         if (!is_login()) {
             header("Location: login");
             exit;
         }
+
+        $this->conn = getDbConnection();
+        $this->orderModel = new \Order($this->conn);
+        $this->memberModel = new \MemberHq($this->conn);
+        $this->activityModel = new \Activity($this->conn);
     }
 
     public function dashboard()
     {
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
 
         $pageName = "Dashboard";
 
-        // Latest 30 orders
-        $sql = "SELECT * FROM `customer_orders` WHERE `status` IN(1,2,3,4,5,6) AND deleted_at IS NULL ORDER BY id DESC LIMIT 30";
-        $query = $conn->query($sql);
+        $query = $this->orderModel->getLatestOrders(30);
 
-        $sqli = "
-            SELECT 
-                a.id AS activity_id,
-                a.user_id,
-                a.created_at AS activity_created,
-                a.updated_at AS activity_updated,
-                a.deleted_at AS activity_deleted,
-                a.description,
-                a.table_name,
-                a.activities,
-                m.id AS member_id,
-                m.email,
-                m.password,
-                m.sec_pin,
-                m.f_name,
-                m.l_name,
-                m.phone,
-                m.role,
-                m.created_at AS member_created,
-                m.updated_at AS member_updated,
-                m.deleted_at AS member_deleted,
-                m.status
-            FROM activities a
-            LEFT JOIN member_hq m ON a.user_id = m.id
-            ORDER BY activity_id DESC
-        ";
-
-        $result = $conn->query($sqli);
+        $result = $this->activityModel->getWithMembers();
 
         require_once __DIR__ . '/../../view/Admin/dashboard.php';
     }
 
     public function salesStatistics()
     {
-        $conn = getDbConnection();
+        $conn = $this->conn;
 
         $todayStart = date('Y-m-d');
         $todayEnd = date('Y-m-d', strtotime('+1 day'));
@@ -119,89 +101,63 @@ class MemberController
     {
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
 
         $pageName = "Profile";
 
-        // Latest 30 orders
-        $sql = "SELECT * FROM `member_hq` WHERE `id`='" . $_SESSION['user']->id . "'";
-        $query = $conn->query($sql);
-
-        $row = $query->fetch_array();
+        $row = $this->memberModel->findById($_SESSION['user']->id);
 
         require_once __DIR__ . '/../../view/Admin/profile.php';
     }
 
     public function updateProfile()
     {
-
         $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-        $currentYear = currentYear();
         $dateNow = dateNow();
-        $fname = isset($_POST['fname']) ? $conn->real_escape_string($_POST['fname']) : '';
-        $lname = isset($_POST['lname']) ? $conn->real_escape_string($_POST['lname']) : '';
-        $phone = isset($_POST['phone']) ? $conn->real_escape_string($_POST['phone']) : '';
 
+        $fname = $_POST['fname'] ?? '';
+        $lname = $_POST['lname'] ?? '';
+        $phone = $_POST['phone'] ?? '';
 
-        $sql = "
-            UPDATE `member_hq`
-            SET `f_name`='$fname', `l_name`='$lname', `phone`='$phone', `updated_at`='$dateNow' WHERE id='" . $_SESSION['user']->id . "'
-        ";
+        $result = $this->memberModel->updateProfile($_SESSION['user']->id, [
+            'f_name' => $fname,
+            'l_name' => $lname,
+            'phone' => $phone
+        ], $dateNow);
 
-
-        $query = $conn->query($sql);
-
-        if ($query) {
+        if ($result) {
             $_SESSION['upload_success'] = 'Successful update your profile.';
-            header("Location: {$domainURL}profile");
-            exit();
         } else {
             $_SESSION['upload_error'] = 'Failed to update profile. Try again later.';
-            header("Location: {$domainURL}profile");
-            exit();
         }
+        header("Location: {$domainURL}profile");
+        exit();
     }
 
     public function salesReport()
     {
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
 
         $pageName = "Sales Report";
 
         $where = [];
+        $result = null;
+        $sumResult = null;
 
         $type = $_GET['type'] ?? null;
 
         if (!empty($_GET['type'] and (!empty($_GET['from']) or !empty($_GET['to']) or !empty($_GET['week'])) or !empty($_GET['month']) or !empty($_GET['year']))) {
             $where = buildDateFilter($type, $_GET);
 
-
             $where[] = "status IN (1,2,3,4)";
             $where[] = "deleted_at IS NULL";
 
             $whereSql = 'WHERE ' . implode(' AND ', $where);
 
-            $sql = "
-                SELECT *
-                FROM customer_orders
-                $whereSql
-                ORDER BY created_at DESC
-                ";
-
-            $sumSql = "
-                SELECT 
-                    COALESCE(SUM(myr_value_include_postage),0) AS total_sales,
-                    COALESCE(SUM(myr_value_without_postage),0) AS total_revenue
-                FROM customer_orders
-                $whereSql
-                ";
-
-            $result = $conn->query($sql);
-            $sumResult = $conn->query($sumSql)->fetch_assoc();
+            $result = $this->orderModel->salesReport($whereSql);
+            $sumResult = $this->orderModel->salesReportSum($whereSql);
         }
 
         require_once __DIR__ . '/../../view/Admin/sales-report.php';

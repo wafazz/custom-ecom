@@ -114,7 +114,7 @@ include "01-menu.php";
 
                             <?php
 
-                            while ($rowp = $permission->fetch_array(MYSQLI_ASSOC)) {
+                            foreach ($permission as $rowp) {
 
                                 $userIds = $rowp["allowed_user"];
                                 $userArray = explode(',', $userIds);

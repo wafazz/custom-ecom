@@ -262,4 +262,25 @@ class Order extends BaseModel
         $rows = $this->query($sql);
         return (int)($rows[0]['total'] ?? 0);
     }
+
+    public function salesReport($whereSql)
+    {
+        $sql = "SELECT * FROM `customer_orders` {$whereSql} ORDER BY `created_at` DESC";
+        return $this->query($sql);
+    }
+
+    public function salesReportSum($whereSql)
+    {
+        $sql = "SELECT COALESCE(SUM(myr_value_include_postage),0) AS total_sales,
+                       COALESCE(SUM(myr_value_without_postage),0) AS total_revenue
+                FROM `customer_orders` {$whereSql}";
+        $rows = $this->query($sql);
+        return $rows[0] ?? ['total_sales' => 0, 'total_revenue' => 0];
+    }
+
+    public function getLatestOrders($limit = 30)
+    {
+        $sql = "SELECT * FROM `customer_orders` WHERE `status` IN(1,2,3,4,5,6) AND `deleted_at` IS NULL ORDER BY `id` DESC LIMIT ?";
+        return $this->query($sql, "i", [$limit]);
+    }
 }

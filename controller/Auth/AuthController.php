@@ -2,23 +2,27 @@
 namespace Auth;
 
 require_once __DIR__ . '/../../config/mainConfig.php';
+require_once __DIR__ . '/../../model/ImageSetting.php';
 
 class AuthController {
+
+    private $imageModel;
+
+    public function __construct()
+    {
+        $this->imageModel = new \ImageSetting();
+    }
+
     public function index() {
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
 
         $errorMessage = $_SESSION['errorMessage'] ?? '';
-        unset($_SESSION['errorMessage']); 
-        
-        $sql = "SELECT * FROM `image_setting` WHERE `use_type`='logo' AND sorting='1'";
-        $query = $conn->query($sql);
-        $row = $query->fetch_assoc();
+        unset($_SESSION['errorMessage']);
 
-        //echo $mainDomain;
-        
+        $row = $this->imageModel->findOne(['use_type' => 'logo', 'sorting' => '1']);
+
         require_once __DIR__ . '/../../view/Auth/login.php';
     }
 
@@ -27,7 +31,6 @@ class AuthController {
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
 
         $token = $_POST["_token"];
 
@@ -39,10 +42,6 @@ class AuthController {
         $_SESSION['errorMessage'] = $message;
 
         header("Location: login");
-
-        //echo $mainDomain;
-        
-        //require_once __DIR__ . '/../../view/Auth/login.php';
     }
-    
+
 }

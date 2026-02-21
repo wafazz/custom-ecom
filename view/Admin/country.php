@@ -57,8 +57,8 @@ include "01-menu.php";
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if ($result->num_rows > 0): ?>
-                                    <?php while ($row = $result->fetch_assoc()): ?>
+                                <?php if (!empty($result)): ?>
+                                    <?php foreach ($result as $row): ?>
                                         <tr>
                                             <td>
                                                 <?= htmlspecialchars($row['id']) ?></td>
@@ -94,7 +94,7 @@ include "01-menu.php";
                                                 <button class="btn btn-info" data-id="<?= htmlspecialchars($row['id']) ?>" data-name="<?= htmlspecialchars($row['name']) ?>" data-code="<?= htmlspecialchars($row['sign']) ?>" data-rate="<?= htmlspecialchars($row['rate']) ?>" data-status="<?= htmlspecialchars($row['status']) ?>" onclick="openModal(this)">Update</button>
                                             </td>
                                         </tr>
-                                    <?php endwhile; ?>
+                                    <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
                                         <td colspan="7">No country found.</td>

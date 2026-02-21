@@ -174,8 +174,8 @@ include "01-menu.php";
                                 </tr>
                             </thead>
 
-                            <?php if ($result->num_rows > 0): ?>
-                                <?php while ($row = $result->fetch_assoc()): ?>
+                            <?php if (!empty($result)): ?>
+                                <?php foreach ($result as $row): ?>
                                     <tr>
                                         <td style="text-align:center;">
                                             <?= htmlspecialchars($row['id']) ?>
@@ -242,7 +242,7 @@ include "01-menu.php";
                                             <?php endif; ?>
                                         </td>
                                     </tr>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
                                     <td colspan="7">no data.</td>

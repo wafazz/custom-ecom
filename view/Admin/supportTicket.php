@@ -36,13 +36,7 @@ include "01-menu.php";
                 <div class="card-body p-0" style="overflow-y: auto; max-height: 74vh;">
 
                     <?php
-                    // Fetch tickets once
-                    $tickets = [];
-                    if ($result->num_rows > 0) {
-                        while ($ticket = $result->fetch_assoc()) {
-                            $tickets[] = $ticket;
-                        }
-                    }
+                    $tickets = $result ?? [];
                     ?>
 
                     <!-- Desktop list: visible on md+ -->
