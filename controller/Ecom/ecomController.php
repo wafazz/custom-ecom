@@ -3,9 +3,34 @@
 namespace Ecom;
 
 require_once __DIR__ . '/../../config/mainConfig.php';
+require_once __DIR__ . '/../../model/Product.php';
+require_once __DIR__ . '/../../model/PageContent.php';
+require_once __DIR__ . '/../../model/NewsBlog.php';
+require_once __DIR__ . '/../../model/OrderDetail.php';
+require_once __DIR__ . '/../../model/Order.php';
+require_once __DIR__ . '/../../model/Cart.php';
 
 class ecomController
 {
+    private $conn;
+    private $productModel;
+    private $pageContentModel;
+    private $newsBlogModel;
+    private $orderDetailModel;
+    private $orderModel;
+    private $cartModel;
+
+    public function __construct()
+    {
+        $this->conn = getDbConnection();
+        $this->productModel = new \Product($this->conn);
+        $this->pageContentModel = new \PageContent($this->conn);
+        $this->newsBlogModel = new \NewsBlog($this->conn);
+        $this->orderDetailModel = new \OrderDetail($this->conn);
+        $this->orderModel = new \Order($this->conn);
+        $this->cartModel = new \Cart($this->conn);
+    }
+
     public function index()
     {
         if (isset($_COOKIE['country'])) {
@@ -16,7 +41,7 @@ class ecomController
         }
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Main";
@@ -43,7 +68,7 @@ class ecomController
         }
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Product Details";
@@ -91,7 +116,7 @@ class ecomController
         }
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Category";
@@ -105,13 +130,7 @@ class ecomController
 
         $dataCategory = getCategoryDetails($id);
 
-        $sql = "SELECT *  
-            FROM `products` 
-            WHERE `category_id`='$id' AND `status` = '1' AND `deleted_at` IS NULL 
-            ORDER BY `created_at`";
-
-        $query = $conn->query($sql);
-
+        $query = $this->productModel->getByCategoryId($id);
 
         require_once __DIR__ . '/../../view/ecom/e-category-keya88.php';
     }
@@ -127,7 +146,7 @@ class ecomController
         }
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Brand";
@@ -141,13 +160,7 @@ class ecomController
 
         $dataBrand = getBrandDetails($id);
 
-        $sql = "SELECT *  
-            FROM `products` 
-            WHERE `brand_id`='$id' AND `status` = '1' AND `deleted_at` IS NULL 
-            ORDER BY `created_at`";
-
-        $query = $conn->query($sql);
-
+        $query = $this->productModel->getByBrandId($id);
 
         require_once __DIR__ . '/../../view/ecom/e-brand-keya88.php';
     }
@@ -163,7 +176,7 @@ class ecomController
         }
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Promo Item";
@@ -175,28 +188,7 @@ class ecomController
         $categories2 = getListCategoryBrand2(2);
         $categories3 = getListCategoryBrand2(2);
 
-
-        $sqls = "
-                SELECT 
-                    p.id AS product_id,
-                    p.name AS product_name,
-                    p.slug,
-                    cpp.market_price,
-                    cpp.sale_price,
-                    cpp.country_id
-                FROM list_country_product_price cpp
-                JOIN products p ON cpp.product_id = p.id
-                WHERE 
-                    cpp.country_id = '$country'
-                    AND cpp.market_price > cpp.sale_price
-                    AND p.status = '1'
-                    AND p.deleted_at IS NULL
-                ORDER BY (cpp.market_price - cpp.sale_price) DESC
-                LIMIT 20
-                ";
-
-        $results = $conn->query($sqls);
-
+        $results = $this->productModel->getPromoItems($country);
 
         require_once __DIR__ . '/../../view/ecom/e-promo-keya88.php';
     }
@@ -210,10 +202,9 @@ class ecomController
             exit;
         }
 
-
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Promo Item";
@@ -225,31 +216,11 @@ class ecomController
         $categories2 = getListCategoryBrand2(2);
         $categories3 = getListCategoryBrand2(2);
 
-        $sql = "
-            SELECT 
-                *
-            FROM order_details 
-            WHERE 
-                hash_code = '$id'
-        ";
-
-        $result = $conn->query($sql);
-        $row = $result->fetch_array();
+        $row = $this->orderDetailModel->findByHashCode($id);
 
         $orderID = $row["order_id"];
 
-        $sqls = "
-            SELECT 
-                *
-            FROM customer_orders 
-            WHERE 
-                id = '$orderID'
-        ";
-
-        $results = $conn->query($sqls);
-        $rows = $results->fetch_array();
-
-
+        $rows = $this->orderModel->getOrderDetails($orderID);
 
         require_once __DIR__ . '/../../view/ecom/e-order-details-keya88.php';
     }
@@ -263,10 +234,9 @@ class ecomController
             exit;
         }
 
-
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Promo Item";
@@ -278,11 +248,7 @@ class ecomController
         $categories2 = getListCategoryBrand2(2);
         $categories3 = getListCategoryBrand2(2);
 
-        $sql = "SELECT * FROM `policy`";
-
-        $query = $conn->query($sql);
-
-        $row = $query->fetch_array();
+        $row = $this->pageContentModel->getContent('policy');
 
         require_once __DIR__ . '/../../view/ecom/e-policies-keya88.php';
     }
@@ -296,10 +262,9 @@ class ecomController
             exit;
         }
 
-
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Contact Us";
@@ -322,10 +287,9 @@ class ecomController
             exit;
         }
 
-
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Promo Item";
@@ -337,11 +301,7 @@ class ecomController
         $categories2 = getListCategoryBrand2(2);
         $categories3 = getListCategoryBrand2(2);
 
-        $sql = "SELECT * FROM `terms_conditions`";
-
-        $query = $conn->query($sql);
-
-        $row = $query->fetch_array();
+        $row = $this->pageContentModel->getContent('terms_conditions');
 
         require_once __DIR__ . '/../../view/ecom/e-terms-keya88.php';
     }
@@ -355,10 +315,9 @@ class ecomController
             exit;
         }
 
-
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "About Us";
@@ -370,11 +329,7 @@ class ecomController
         $categories2 = getListCategoryBrand2(2);
         $categories3 = getListCategoryBrand2(2);
 
-        $sql = "SELECT * FROM `about_us`";
-
-        $query = $conn->query($sql);
-
-        $row = $query->fetch_array();
+        $row = $this->pageContentModel->getContent('about_us');
 
         require_once __DIR__ . '/../../view/ecom/e-about-keya88.php';
     }
@@ -388,10 +343,9 @@ class ecomController
             exit;
         }
 
-
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Announcement & Blog";
@@ -407,24 +361,7 @@ class ecomController
         $limit = 20;
         $offset = ($page - 1) * $limit;
 
-        $sql = "
-            SELECT 
-                id,
-                post_by,
-                update_by,
-                title,
-                contents,
-                created_at,
-                updated_at,
-                deleted_at,
-                reader
-            FROM `2025_rozeyana`.news_blog
-            WHERE deleted_at IS NULL
-            ORDER BY created_at DESC
-            LIMIT $limit OFFSET $offset
-            ";
-
-        $result = $conn->query($sql);
+        $result = $this->newsBlogModel->getPaginated($limit, $offset);
 
         require_once __DIR__ . '/../../view/ecom/e-blog-keya88.php';
     }
@@ -440,7 +377,7 @@ class ecomController
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "About Us";
@@ -469,33 +406,29 @@ class ecomController
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
 
-        $sql = "SELECT * FROM customer_orders WHERE id='$id1' AND customer_email='$id2' AND `status` IN(1,2,3,4,5,6) AND deleted_at IS NULL";
-        $query = $conn->query($sql);
+        $row = $this->orderModel->findByIdAndEmail($id1, $id2);
 
-        if ($query->num_rows < "1") {
+        if (!$row) {
 ?>
             <small>Result:</small>
             <br>
             <span class="text-danger">No order found.</span>
             <?php
         } else {
-            $row = $query->fetch_array();
             $oid = $row["id"];
-            $sql2 = "SELECT * FROM order_details WHERE order_id='$oid'";
-            $query2 = $conn->query($sql2);
+            $row2 = $this->orderDetailModel->findByOrderId($oid);
 
-            if ($query2->num_rows < "1") {
+            if (!$row2) {
             ?>
                 <small>Result:</small>
                 <br>
                 <span class="text-danger">No order found.</span>
             <?php
             } else {
-                $row2 = $query2->fetch_array();
             ?>
                 <small>Result:</small>
                 <br>
@@ -510,22 +443,18 @@ class ecomController
     public function cartDelete()
     {
         $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-        $currentYear = currentYear();
         $dateNow = dateNow();
 
         $nowSession = $_SESSION["session_id"];
-
         $deleteID = $_GET["id"];
 
-        $validate = $conn->query("SELECT * FROM cart WHERE id='$deleteID' AND session_id='$nowSession' AND deleted_at IS NULL AND `status`='0'");
+        $validate = $this->cartModel->findActiveByIdAndSession($deleteID, $nowSession);
 
-        if ($validate->num_rows != 1) {
+        if (!$validate) {
             header("Location: /checkout");
             exit;
         } else {
-            $update = $conn->query("UPDATE cart SET deleted_at='$dateNow', `status`='5' WHERE id='$deleteID'");
+            $this->cartModel->softDeleteWithStatus($deleteID, $dateNow, '5');
             header("Location: /checkout");
             exit;
         }
@@ -534,10 +463,6 @@ class ecomController
     public function changeCountry()
     {
         $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-        $currentYear = currentYear();
-        $dateNow = dateNow();
         setcookie("country", "", time() - 3600, "/");
 
         header("Location: " . $domainURL);

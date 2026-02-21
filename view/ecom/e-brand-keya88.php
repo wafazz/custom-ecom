@@ -29,7 +29,7 @@ include "e-menu-keya88.php";
 
                 <div class="row property__gallery">
                     <?php
-                    while ($rowNew = $query->fetch_assoc()) {
+                    foreach ($query as $rowNew) {
                         $proid = $rowNew["id"];
                         $sqlProImage = "SELECT * FROM product_image WHERE product_id='$proid' ORDER BY id ASC LIMIT 1";
                         $queryProImage = $conn->query($sqlProImage);

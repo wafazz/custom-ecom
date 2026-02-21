@@ -36,4 +36,10 @@ class NewsBlog extends BaseModel
         $sql = "UPDATE `news_blog` SET `update_by` = ?, `updated_at` = ?, `deleted_at` = ? WHERE `id` = ?";
         return $this->execute($sql, "sssi", [$updateBy, $dateNow, $dateNow, $id]);
     }
+
+    public function getPaginated($limit, $offset)
+    {
+        $sql = "SELECT `id`, `post_by`, `update_by`, `title`, `contents`, `created_at`, `updated_at`, `deleted_at`, `reader` FROM `news_blog` WHERE `deleted_at` IS NULL ORDER BY `created_at` DESC LIMIT ? OFFSET ?";
+        return $this->query($sql, "ii", [$limit, $offset]);
+    }
 }

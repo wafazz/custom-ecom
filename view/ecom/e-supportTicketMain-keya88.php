@@ -28,9 +28,9 @@ include "e-menu-keya88.php";
 
             <div class="col-lg-12">
                 <?php
-                if ($verifyTicket->num_rows > 0) {
+                if (!empty($verifyTicket)) {
                     // Ticket found, display details
-                    $ticketDetails = $verifyTicket->fetch_assoc();
+                    $ticketDetails = $verifyTicket;
                     $ticket_nos = $ticketDetails['ticket_no'];
                     $priority = $ticketDetails['priority'];
                     $status = $ticketDetails['status'];
@@ -106,7 +106,7 @@ include "e-menu-keya88.php";
                 <div style="max-height:800px !important; overflow-x: hidden !important;; margin-bottom:20px;">
                     <?php
 
-                    if ($verifyTicket->num_rows > 0) {
+                    if (!empty($verifyTicket)) {
 
 
                     ?>
@@ -410,9 +410,9 @@ include "e-menu-keya88.php";
         </div>
 
         <?php
-        if ($verifyTicket->num_rows < 1) {
+        if (empty($verifyTicket)) {
             // Ticket found, display details
-            $ticketDetails = $verifyTicket->fetch_assoc();
+            $ticketDetails = $verifyTicket;
         ?>
             <script>
                 Swal.fire({

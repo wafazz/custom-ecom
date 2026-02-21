@@ -107,7 +107,7 @@
                                 $x=1;
                                 $tqty = "0";
                                 $tprice = "0";
-                                while($rowcart = $getCart->fetch_array()){
+                                foreach($getCart as $rowcart){
 
                                     $dataProduct = dataProduct($rowcart["product_id"]);
 

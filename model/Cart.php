@@ -134,4 +134,17 @@ class Cart extends BaseModel
         $sql = "UPDATE `cart` SET `updated_at` = ?, `deleted_at` = NULL, `status` = '1' WHERE `id` = ?";
         return $this->execute($sql, "si", [$dateNow, $cartId]);
     }
+
+    public function findActiveByIdAndSession($id, $sessionId)
+    {
+        $sql = "SELECT * FROM `cart` WHERE `id` = ? AND `session_id` = ? AND `deleted_at` IS NULL AND `status` = '0'";
+        $rows = $this->query($sql, "is", [$id, $sessionId]);
+        return $rows[0] ?? null;
+    }
+
+    public function softDeleteWithStatus($id, $dateNow, $status = '5')
+    {
+        $sql = "UPDATE `cart` SET `deleted_at` = ?, `status` = ? WHERE `id` = ?";
+        return $this->execute($sql, "ssi", [$dateNow, $status, $id]);
+    }
 }

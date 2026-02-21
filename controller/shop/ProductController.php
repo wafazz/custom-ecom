@@ -2,13 +2,30 @@
 namespace Shop;
 
 require_once __DIR__ . '/../../config/mainConfig.php';
+require_once __DIR__ . '/../../model/ShopCategory.php';
+require_once __DIR__ . '/../../model/ShopCart.php';
+require_once __DIR__ . '/../../model/ShopProduct.php';
 
 class ProductController {
+
+    private $conn;
+    private $categoryModel;
+    private $cartModel;
+    private $productModel;
+
+    public function __construct()
+    {
+        $this->conn = getDbConnection();
+        $this->categoryModel = new \ShopCategory($this->conn);
+        $this->cartModel = new \ShopCart($this->conn);
+        $this->productModel = new \ShopProduct($this->conn);
+    }
+
     public function index($id) {
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $pageid = 2;
         $pageName = "PRODUCT";
         if(!isset($_SESSION["referby"])){
@@ -20,68 +37,31 @@ class ProductController {
             }
         }
 
-        
         $userData = userData($_SESSION["referby"]);
-
         $theUserId = $userData["id"];
 
-        $sql = "SELECT * FROM category WHERE `status`='1' AND assigned_user LIKE '%[$theUserId]%'";
-        $result = $conn->query($sql);
-
-        if($userData["moq_kpi"] == 1){
-            //$sqlProduct = "SELECT * FROM product WHERE `enable_kpi`='1' AND `status`='1'";
-            $sqlProduct = "
-                SELECT p.member_point AS member_point, p.product_description AS product_description, p.sku AS product_sku, p.product_name AS product_name, p.product_image AS product_image, p.selling_price AS selling_price, c.cat_name AS category_name
-                FROM product p
-                JOIN category c ON p.category = c.id
-                WHERE p.id = $id AND p.enable_kpi = '1' AND p.status = '1'
-            ";
-        }else if($userData["moq_kpi"] == 0){
-            $sqlProduct = "
-                SELECT p.member_point AS member_point, p.product_description AS product_description, p.sku AS product_sku, p.product_name AS product_name, p.product_image AS product_image, p.selling_price AS selling_price, c.cat_name AS category_name
-                FROM product p
-                JOIN category c ON p.category = c.id
-                WHERE p.id = $id AND p.enable_moq = '1' AND p.status = '1'
-            ";
-        }else{
-            $sqlProduct = "
-                SELECT p.member_point AS member_point, p.product_description AS product_description, p.sku AS product_sku, p.product_name AS product_name, p.product_image AS product_image, p.selling_price AS selling_price, c.cat_name AS category_name
-                FROM product p
-                JOIN category c ON p.category = c.id
-                WHERE p.id = $id AND p.enable_moq = '1' AND p.status = '1'
-            ";
-        }
-        $resultProduct = $conn->query($sqlProduct);
-
-        $category = [];
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $category[] = $row;
-            }
-        } else {
+        $category = $this->categoryModel->getByAssignedUser($theUserId);
+        if (empty($category)) {
             echo "No category found.";
         }
 
-        //$product = $resultProduct->fetch_assoc();
-        if ($resultProduct->num_rows > 0) {
-            $product = $resultProduct->fetch_assoc();
-        } else {
+        if($userData["moq_kpi"] == 1){
+            $enableField = 'enable_kpi';
+        }else{
+            $enableField = 'enable_moq';
+        }
+
+        $product = $this->productModel->getProductWithCategory($id, $enableField);
+
+        if (!$product) {
             header("Location: ".$domainURL);
         }
 
-        
-
-        // Close the connection
-        $conn->close();
-
-        //echo "Product Page for id: ".$id;
         require_once __DIR__ . '/../../view/shop/shopProduct.php';
     }
 
     public function addToCart()
     {
-
-        $conn = getDbConnection();
         $timezone = "Asia/Kuala_Lumpur";
         if(function_exists('date_default_timezone_set')) date_default_timezone_set($timezone);
         $dates = date("Y-m-d H:i:s");
@@ -95,137 +75,56 @@ class ProductController {
 
         $dataProduct = dataProduct($productID);
 
+        $existingCart = $this->cartModel->findByUserProductCart($cartSessions[2], $productID, $cartSession);
 
-        $getCart = $conn->query("SELECT * FROM cart WHERE order_by='$cartSessions[2]' AND product_id='$productID' AND cart_id='$cartSession'");
+        if($existingCart){
+            $newQTY = $existingCart["quantity"] + $productQTY;
+            $newPrice = $newQTY * $existingCart["unit_price"];
+            $totalWeight = $newQTY * $existingCart["unit_weight"];
+            $totalCapital = $newQTY * $existingCart["price_capital"];
 
-        if($getCart->num_rows >= "1"){
-            $dataCart = $getCart->fetch_array();
-
-            $newQTY = $dataCart["quantity"] + $productQTY;
-            $newPrice = $newQTY * $dataCart["unit_price"];
-            $totalWeight = $newQTY * $dataCart["unit_weight"];
-            $totalCapital = $newQTY * $dataCart["price_capital"];
-
-            $updateCart = $conn->query("UPDATE cart SET quantity='$newQTY', total_price='$newPrice', total_retail_price='$newPrice', date_update='$dates', total_price_capital='$totalCapital', total_weight='$totalWeight' WHERE order_by='$cartSessions[2]' AND product_id='$productID' AND cart_id='$cartSession'");
+            $this->cartModel->updateByUserProductCart($cartSessions[2], $productID, $cartSession, [
+                'quantity' => $newQTY,
+                'total_price' => $newPrice,
+                'total_retail_price' => $newPrice,
+                'date_update' => $dates,
+                'total_price_capital' => $totalCapital,
+                'total_weight' => $totalWeight,
+            ]);
 
         }else{
-            if ($userData["moq_kpi"] == "0") {
-                if ($userData["role"] == "4") {
-                    $thePrice =  $dataProduct["role_4"];
+            $sellPrice = $dataProduct["selling_price"];
+            $totalPrice = $productQTY * $sellPrice;
+            $network = $userData["network_tree"];
+            $productWeight = $dataProduct["weight"];
+            $totalWeight = $productQTY * $dataProduct["weight"];
+            $totalRetailPrice = $productQTY * $dataProduct["selling_price"];
+            $totalCapitalPrice = $productQTY * $dataProduct["capital_price"];
 
-                } else if ($userData["role"] == "5") {
-                    $thePrice =  $dataProduct["role_5"];
-
-                } else if ($userData["role"] == "6") {
-                    $thePrice =  $dataProduct["role_6"];
-
-                } else if ($userData["role"] == "7") {
-                    $thePrice =  $dataProduct["role_7"];
-
-                } else if ($userData["role"] == "8") {
-                    $thePrice =  $dataProduct["role_8"];
-
-                } else if ($userData["role"] == "9") {
-                    $thePrice =  $dataProduct["role_9"];
-
-                } else if ($userData["role"] == "10") {
-                    $thePrice =  $dataProduct["role_10"];
-
-                }
-
-                $sellPrice = $dataProduct["selling_price"];
-                $totalPrice = $productQTY * $sellPrice;
-
-                $network = $userData["network_tree"];
-
-                $productWeight = $dataProduct["weight"];
-                $totalWeight = $productQTY * $dataProduct["weight"];
-                
-                
-                $totalRetailPrice = $productQTY *  $dataProduct["selling_price"];
-                $totalCapitalPrice = $productQTY *  $dataProduct["capital_price"];
-                $addNewCart = $conn->query("INSERT INTO `cart`(`id`, `order_by`, `product_id`, `product_sub_id`, `product_name`, `quantity`, `unit_price`, `total_price`, `retail_price`, `total_retail_price`, `date_added`, `date_update`, `network_tree`, `cart_id`, `price_capital`, `total_price_capital`, `status`, `user_type`, `cod_add_on`, `charge_seller`, `unit_weight`, `total_weight`, `combo`) VALUES (NULL,'$cartSessions[2]','$productID','0','". $dataProduct["product_name"]."','$productQTY','".$sellPrice."','$totalPrice','". $dataProduct["selling_price"]."','$totalRetailPrice','$dates','$dates','$network','$cartSession','". $dataProduct["capital_price"]."','$totalCapitalPrice','0','2','". $dataProduct["cod_add_on"]."','". $dataProduct["charge_back_if_not_charge_cod"]."','$productWeight','$totalWeight','0')");
-
-                //echo "1<br>";
-
-            } else if ($userData["moq_kpi"] == "1") {
-                if ($userData["role"] == "4") {
-                    $thePrice =  $dataProduct["kpi_4"];
-
-                } else if ($userData["role"] == "5") {
-                    $thePrice =  $dataProduct["kpi_5"];
-
-                } else if ($userData["role"] == "6") {
-                    $thePrice =  $dataProduct["kpi_6"];
-
-                } else if ($userData["role"] == "7") {
-                    $thePrice =  $dataProduct["kpi_7"];
-
-                } else if ($userData["role"] == "8") {
-                    $thePrice =  $dataProduct["kpi_8"];
-
-                } else if ($userData["role"] == "9") {
-                    $thePrice =  $dataProduct["kpi_9"];
-
-                } else if ($userData["role"] == "10") {
-                    $thePrice =  $dataProduct["kpi_10"];
-
-                }
-
-                $sellPrice = $dataProduct["selling_price"];
-                $totalPrice = $productQTY * $sellPrice;
-
-                $network = $userData["network_tree"];
-
-                $productWeight = $dataProduct["weight"];
-                $totalWeight = $productQTY * $dataProduct["weight"];
-                
-                
-                $totalRetailPrice = $productQTY *  $dataProduct["selling_price"];
-                $totalCapitalPrice = $productQTY *  $dataProduct["capital_price"];
-                $addNewCart = $conn->query("INSERT INTO `cart`(`id`, `order_by`, `product_id`, `product_sub_id`, `product_name`, `quantity`, `unit_price`, `total_price`, `retail_price`, `total_retail_price`, `date_added`, `date_update`, `network_tree`, `cart_id`, `price_capital`, `total_price_capital`, `status`, `user_type`, `cod_add_on`, `charge_seller`, `unit_weight`, `total_weight`, `combo`) VALUES (NULL,'$cartSessions[2]','$productID','0','". $dataProduct["product_name"]."','$productQTY','".$sellPrice."','$totalPrice','". $dataProduct["selling_price"]."','$totalRetailPrice','$dates','$dates','$network','$cartSession','". $dataProduct["capital_price"]."','$totalCapitalPrice','0','2','". $dataProduct["cod_add_on"]."','". $dataProduct["charge_back_if_not_charge_cod"]."','$productWeight','$totalWeight','0')");
-
-                //echo "2<br>";
-
-            }else{
-                if ($userData["role"] == "4") {
-                    $thePrice =  $dataProduct["role_4"];
-
-                } else if ($userData["role"] == "5") {
-                    $thePrice =  $dataProduct["role_5"];
-
-                } else if ($userData["role"] == "6") {
-                    $thePrice =  $dataProduct["role_6"];
-
-                } else if ($userData["role"] == "7") {
-                    $thePrice =  $dataProduct["role_7"];
-
-                } else if ($userData["role"] == "8") {
-                    $thePrice =  $dataProduct["role_8"];
-
-                } else if ($userData["role"] == "9") {
-                    $thePrice =  $dataProduct["role_9"];
-
-                } else if ($userData["role"] == "10") {
-                    $thePrice =  $dataProduct["role_10"];
-
-                }
-
-                $sellPrice = $dataProduct["selling_price"];
-                $totalPrice = $productQTY * $sellPrice;
-
-                $network = $userData["network_tree"];
-
-                $productWeight = $dataProduct["weight"];
-                $totalWeight = $productQTY * $dataProduct["weight"];
-                
-                
-                $totalRetailPrice = $productQTY *  $dataProduct["selling_price"];
-                $totalCapitalPrice = $productQTY *  $dataProduct["capital_price"];
-                $addNewCart = $conn->query("INSERT INTO `cart`(`id`, `order_by`, `product_id`, `product_sub_id`, `product_name`, `quantity`, `unit_price`, `total_price`, `retail_price`, `total_retail_price`, `date_added`, `date_update`, `network_tree`, `cart_id`, `price_capital`, `total_price_capital`, `status`, `user_type`, `cod_add_on`, `charge_seller`, `unit_weight`, `total_weight`, `combo`) VALUES (NULL,'$cartSessions[2]','$productID','0','". $dataProduct["product_name"]."','$productQTY','".$sellPrice."','$totalPrice','". $dataProduct["selling_price"]."','$totalRetailPrice','$dates','$dates','$network','$cartSession','". $dataProduct["capital_price"]."','$totalCapitalPrice','0','2','". $dataProduct["cod_add_on"]."','". $dataProduct["charge_back_if_not_charge_cod"]."','$productWeight','$totalWeight','0')");
-
-                //echo "3<br>";
-            }
+            $this->cartModel->insertCartItem([
+                'order_by' => $cartSessions[2],
+                'product_id' => $productID,
+                'product_sub_id' => '0',
+                'product_name' => $dataProduct["product_name"],
+                'quantity' => $productQTY,
+                'unit_price' => $sellPrice,
+                'total_price' => $totalPrice,
+                'retail_price' => $dataProduct["selling_price"],
+                'total_retail_price' => $totalRetailPrice,
+                'date_added' => $dates,
+                'date_update' => $dates,
+                'network_tree' => $network,
+                'cart_id' => $cartSession,
+                'price_capital' => $dataProduct["capital_price"],
+                'total_price_capital' => $totalCapitalPrice,
+                'status' => '0',
+                'user_type' => '2',
+                'cod_add_on' => $dataProduct["cod_add_on"],
+                'charge_seller' => $dataProduct["charge_back_if_not_charge_cod"],
+                'unit_weight' => $productWeight,
+                'total_weight' => $totalWeight,
+                'combo' => '0',
+            ]);
 
             echo "Successful updated cart.";
         }
@@ -233,19 +132,16 @@ class ProductController {
 
     public function dataCart()
     {
-        $conn = getDbConnection();
         $sessionCartID = $_SESSION["web_cart_id"];
         $userSession = $_SESSION["referby"];
 
-        $getCart = $conn->query("SELECT SUM(quantity) AS qty FROM cart WHERE order_by='$userSession' AND cart_id='$sessionCartID' AND `status`='0'");
-        $getCarts = $getCart->fetch_assoc();
+        $qty = $this->cartModel->getCartQty($userSession, $sessionCartID);
 
-        if($getCarts["qty"] < "1"){
+        if($qty < 1){
             echo "0";
         }else{
-            echo $getCarts["qty"];
+            echo $qty;
         }
-        
     }
 
 }

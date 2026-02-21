@@ -2,13 +2,33 @@
 namespace Shop;
 
 require_once __DIR__ . '/../../config/mainConfig.php';
+require_once __DIR__ . '/../../model/ShopCategory.php';
+require_once __DIR__ . '/../../model/Membership.php';
+require_once __DIR__ . '/../../model/Member.php';
+require_once __DIR__ . '/../../model/PhoneVerifyCode.php';
 
 class AuthController {
+
+    private $conn;
+    private $categoryModel;
+    private $membershipModel;
+    private $memberModel;
+    private $phoneVerifyModel;
+
+    public function __construct()
+    {
+        $this->conn = getDbConnection();
+        $this->categoryModel = new \ShopCategory($this->conn);
+        $this->membershipModel = new \Membership($this->conn);
+        $this->memberModel = new \Member($this->conn);
+        $this->phoneVerifyModel = new \PhoneVerifyCode($this->conn);
+    }
+
     public function index() {
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $pageid = 2;
         $pageName = "MEMBERSHIP";
         if(!isset($_SESSION["referby"])){
@@ -26,19 +46,11 @@ class AuthController {
 
         $cartId = $_SESSION["web_cart_id"];
 
-        
         $userData = userData($_SESSION["referby"]);
-
         $theUserId = $userData["id"];
 
-        $sql = "SELECT * FROM category WHERE `status`='1' AND assigned_user LIKE '%[$theUserId]%'";
-        $result = $conn->query($sql);
-        $category = [];
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $category[] = $row;
-            }
-        } else {
+        $category = $this->categoryModel->getByAssignedUser($theUserId);
+        if (empty($category)) {
             echo "No category found.";
         }
 
@@ -72,23 +84,19 @@ class AuthController {
             }
 
             $errorReg = "";
-            $verifyEmail = $conn->query("SELECT * FROM membership WHERE email='$email'");
-            if($verifyEmail->num_rows >= "1"){
+            if($this->membershipModel->checkEmailExists($email)){
                 $errorReg .= "<li class='error'>Email already been used.</li>";
             }else{
-                $verifyEmailM = $conn->query("SELECT * FROM member WHERE email='$email'");
-                if($verifyEmailM->num_rows >= "1"){
+                if($this->memberModel->checkEmailExists($email)){
                     $errorReg .= "<li class='error'>Email already been used.</li>";
                 }
             }
 
-            $verifyPhone = $conn->query("SELECT * FROM membership WHERE phone_c_code='$ccode' AND phone_no='$phone'");
-            if($verifyPhone->num_rows >= "1"){
+            if($this->membershipModel->checkPhoneExists($ccode, $phone)){
                 $errorReg .= "<li class='error'>Phone no. already been used.</li>";
             }else{
                 $phoneF = $ccode.$phone;
-                $verifyPhoneM = $conn->query("SELECT * FROM member WHERE m_phone LIKE '%$phoneF%'");
-                if($verifyPhoneM->num_rows >= "1"){
+                if($this->memberModel->checkPhoneExists($phoneF)){
                     $errorReg .= "<li class='error'>Phone no. already been used.</li>";
                 }
             }
@@ -103,11 +111,23 @@ class AuthController {
                 }
 
                 $regHex = generateRandomString(12);
-                $addMembership = $conn->query("INSERT INTO `membership`(`id`, `reg_hex`, `name`, `email`, `password`, `phone_c_code`, `phone_no`, `address_1`, `address_2`, `city`, `postcode`, `state`, `country`, `date_added`, `date_update`, `date_delete`, `status`, `phone_verify`, `email_verify`, `membership_stage`, `referral`) VALUES (NULL,'$regHex','$fullname','$email','$passwords','$ccode','$phone','','','','','','$country','$dates','$dates','','0','0','0','0','$theUserId')");
+                $this->membershipModel->registerMember([
+                    'reg_hex' => $regHex,
+                    'name' => $fullname,
+                    'email' => $email,
+                    'password' => $passwords,
+                    'phone_c_code' => $ccode,
+                    'phone_no' => $phone,
+                    'country' => $country,
+                    'date_added' => $dates,
+                    'date_update' => $dates,
+                    'referral' => $theUserId,
+                    'referral_membership' => '0',
+                ]);
 
-                if($addMembership){
-                    $getMembership = $conn->query("SELECT * FROM membership WHERE reg_hex='$regHex'");
-                    $getMemberships = $getMembership->fetch_array();
+                $getMemberships = $this->membershipModel->findByRegHex($regHex);
+
+                if($getMemberships){
                     $_SESSSION["membership"] = $getMemberships["id"];
 
                     ?>
@@ -120,15 +140,6 @@ class AuthController {
             }
         }
 
-        
-        //echo $nextUrl;
-
-        // Close the connection
-        $conn->close();
-
-        //echo $bilCart;
-
-        //echo "Product Page for id: ".$id;
         require_once __DIR__ . '/../../view/shop/shopAuth.php';
     }
 
@@ -136,7 +147,7 @@ class AuthController {
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $pageid = 2;
         $pageName = "MEMBERSHIP";
         if(!isset($_SESSION["referby"])){
@@ -154,16 +165,10 @@ class AuthController {
 
         $cartId = $_SESSION["web_cart_id"];
 
-        
         $userData = userData($_SESSION["referby"]);
-
         $theUserId = $userData["id"];
 
-        
-
-        
             $fullname = $conn->real_escape_string($_POST["full-name"]);
-            //echo $fullname;
             $ccode = $conn->real_escape_string($_POST["ccode"]);
             $phone = $conn->real_escape_string($_POST["phone"]);
             $email = $conn->real_escape_string($_POST["email"]);
@@ -179,23 +184,19 @@ class AuthController {
             }
 
             $errorReg = "";
-            $verifyEmail = $conn->query("SELECT * FROM membership WHERE email='$email'");
-            if($verifyEmail->num_rows >= "1"){
+            if($this->membershipModel->checkEmailExists($email)){
                 $errorReg .= "<li class='error'>Email already been used.</li>";
             }else{
-                $verifyEmailM = $conn->query("SELECT * FROM member WHERE email='$email'");
-                if($verifyEmailM->num_rows >= "1"){
+                if($this->memberModel->checkEmailExists($email)){
                     $errorReg .= "<li class='error'>Email already been used.</li>";
                 }
             }
 
-            $verifyPhone = $conn->query("SELECT * FROM membership WHERE phone_c_code='$ccode' AND phone_no='$phone'");
-            if($verifyPhone->num_rows >= "1"){
+            if($this->membershipModel->checkPhoneExists($ccode, $phone)){
                 $errorReg .= "<li class='error'>Phone no. already been used.</li>";
             }else{
                 $phoneF = $ccode.$phone;
-                $verifyPhoneM = $conn->query("SELECT * FROM member WHERE m_phone LIKE '%$phoneF%'");
-                if($verifyPhoneM->num_rows >= "1"){
+                if($this->memberModel->checkPhoneExists($phoneF)){
                     $errorReg .= "<li class='error'>Phone no. already been used.</li>";
                 }
             }
@@ -216,12 +217,23 @@ class AuthController {
                 }
 
                 $regHex = generateRandomString(12);
-                $addMembership = $conn->query("INSERT INTO `membership`(`id`, `reg_hex`, `name`, `email`, `password`, `phone_c_code`, `phone_no`, `address_1`, `address_2`, `city`, `postcode`, `state`, `country`, `date_added`, `date_update`, `date_delete`, `status`, `phone_verify`, `email_verify`, `membership_stage`, `referral`, `referral_membership`) VALUES (NULL,'$regHex','$fullname','$email','$passwords','$ccode','$phone','','','','','','$country','$dates','$dates',NULL,'0','0','0','0','$theUserId','$sponsorMember')");
+                $this->membershipModel->registerMember([
+                    'reg_hex' => $regHex,
+                    'name' => $fullname,
+                    'email' => $email,
+                    'password' => $passwords,
+                    'phone_c_code' => $ccode,
+                    'phone_no' => $phone,
+                    'country' => $country,
+                    'date_added' => $dates,
+                    'date_update' => $dates,
+                    'referral' => $theUserId,
+                    'referral_membership' => $sponsorMember,
+                ]);
 
-                if($addMembership){
-                    $getMembership = $conn->query("SELECT * FROM membership WHERE reg_hex='$regHex'");
-                    $getMemberships = $getMembership->fetch_array();
+                $getMemberships = $this->membershipModel->findByRegHex($regHex);
 
+                if($getMemberships){
                     if($getMemberships["phone_verify"] == "0"){
                         ?>
                         <script>
@@ -238,32 +250,18 @@ class AuthController {
                         </script>
                         <?php
                     }
-
-                    
                 }
             }else{
                 $_SESSION["errorReg"] = $errorReg;
                 header("Location: ".$domainURL."secure-account");
             }
-        
-
-        
-        //echo $nextUrl;
-
-        // Close the connection
-        $conn->close();
-
-        //echo $bilCart;
-
-        //echo "Product Page for id: ".$id;
-        //require_once __DIR__ . '/../../view/shop/shopAuth.php';
     }
 
     public function index3() {
 
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $pageid = 2;
         $pageName = "MEMBERSHIP";
         if(!isset($_SESSION["referby"])){
@@ -281,40 +279,25 @@ class AuthController {
 
         $cartId = $_SESSION["web_cart_id"];
 
-        
         $userData = userData($_SESSION["referby"]);
-
         $theUserId = $userData["id"];
 
-        
-
-        
             $email = $conn->real_escape_string($_POST["email"]);
             $password = $conn->real_escape_string($_POST["password"]);
             $passwords = hash('sha256', $password);
 
-            
-
             $errorReg = "";
-            $verifyEmail = $conn->query("SELECT * FROM membership WHERE email='$email' AND `password`='$passwords'");
-            if($verifyEmail->num_rows != "1"){
+            $getMemberships = $this->membershipModel->findByEmailAndPassword($email, $passwords);
+            if(!$getMemberships){
                 $errorReg .= "<li class='error'>Invalid email/password</li>";
             }
 
-            //echo $errorReg;
-
-            
-
             if(empty($errorReg)){
-                //echo 1;
                 function generateRandomString($length = 10) {
                     return substr(bin2hex(random_bytes($length)), 0, $length);
                 }
 
-                
-
-                if($verifyEmail){
-                    $getMemberships = $verifyEmail->fetch_array();
+                if($getMemberships){
 
                     if($getMemberships["phone_verify"] == "0"){
                         unset($_SESSION["referby"]);
@@ -337,16 +320,27 @@ class AuthController {
 
                         $new_date = date('Y-m-d H:i:s', strtotime($dates . ' +10 minutes'));
                         $_SESSION["expired"] = $new_date;
-                        
 
                         $expDate = $new_date;
 
-                        $isexistPhone = $conn->query("SELECT * FROM phone_verify_code WHERE member='$memid' AND phone_no='$normalized_number'");
+                        $isexistPhone = $this->phoneVerifyModel->findByMemberAndPhone($memid, $normalized_number);
 
-                        if($isexistPhone->num_rows < "1"){
-                            $addNewRecord = $conn->query("INSERT INTO `phone_verify_code`(`mem_id`, `member`, `phone_no`, `wasap_code`, `status`, `date_send`, `date_update`, `code_expired_on`) VALUES (NULL,'$memid','$normalized_number','".$_SESSION["tac"]."','0','$dates','$dates','$expDate')");
+                        if(!$isexistPhone){
+                            $this->phoneVerifyModel->createRecord([
+                                'member' => $memid,
+                                'phone_no' => $normalized_number,
+                                'wasap_code' => $_SESSION["tac"],
+                                'date_send' => $dates,
+                                'date_update' => $dates,
+                                'code_expired_on' => $expDate,
+                            ]);
                         }else{
-                            $addNewRecord = $conn->query("UPDATE `phone_verify_code` SET wasap_code='".$_SESSION["tac"]."', `status`='0', `date_send`='$dates', `date_update`='$dates', `code_expired_on`='$expDate' WHERE member='$memid' AND phone_no='$normalized_number'");
+                            $this->phoneVerifyModel->updateCode($memid, $normalized_number, [
+                                'wasap_code' => $_SESSION["tac"],
+                                'date_send' => $dates,
+                                'date_update' => $dates,
+                                'code_expired_on' => $expDate,
+                            ]);
                         }
 
                         $curl = curl_init();
@@ -394,33 +388,18 @@ class AuthController {
                         </script>
                         <?php
                     }
-
-                    
                 }
             }else{
-                //echo 2;
                 $_SESSION["errorLogin"] = $errorReg;
                 header("Location: ".$domainURL."secure-account");
             }
-        
-
-        
-        //echo $nextUrl;
-
-        // Close the connection
-        $conn->close();
-
-        //echo $bilCart;
-
-        //echo "Product Page for id: ".$id;
-        //require_once __DIR__ . '/../../view/shop/shopAuth.php';
     }
 
     public function verifyPhone()
     {
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $pageid = 2;
         $pageName = "MEMBERSHIP";
         if(!isset($_SESSION["referby"])){
@@ -438,19 +417,11 @@ class AuthController {
 
         $cartId = $_SESSION["web_cart_id"];
 
-        
         $userData = userData($_SESSION["referby"]);
-
         $theUserId = $userData["id"];
 
-        $sql = "SELECT * FROM category WHERE `status`='1' AND assigned_user LIKE '%[$theUserId]%'";
-        $result = $conn->query($sql);
-        $category = [];
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $category[] = $row;
-            }
-        } else {
+        $category = $this->categoryModel->getByAssignedUser($theUserId);
+        if (empty($category)) {
             echo "No category found.";
         }
 
@@ -463,26 +434,14 @@ class AuthController {
         $suser = $_SESSION["usertac"];
         $stac = $_SESSION["tac"];
 
-        $tacDetail = $conn->query("SELECT * FROM `phone_verify_code` WHERE `member`='$suser'");
-        
-        $tacDetails = $tacDetail->fetch_array();
+        $tacDetails = $this->phoneVerifyModel->findByMember($suser);
 
-        //var_dump($tacDetails);
-        //die();
-        
-        $conn->close();
-
-        //echo $bilCart;
-
-        //echo "Product Page for id: ".$id;
         require_once __DIR__ . '/../../view/shop/verifyPhone.php';
     }
 
     public function submitPhone()
     {
         $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
 
         $s_name = $_POST["s_name"] ?? "";
 
@@ -502,8 +461,8 @@ class AuthController {
             header("Location: ".$domainURL."verify_phone");
         }else{
             $member = $_SESSION["usertac"];
-            $updatePhone = $conn->query("UPDATE phone_verify_code SET `status`='1' WHERE member='$member' AND wasap_code='$pins'");
-            $updateMember = $conn->query("UPDATE membership SET phone_verify='1' WHERE id='$member'");
+            $this->phoneVerifyModel->verifyCode($member, $pins);
+            $this->membershipModel->updatePhoneVerify($member);
 
             echo $member;
 

@@ -26,8 +26,8 @@ include "e-menu-keya88.php";
 
                 <div class="row property__gallery">
                     <?php
-                    if ($results->num_rows > 0) {
-                        while ($rows = $results->fetch_assoc()) {
+                    if (!empty($results)) {
+                        foreach ($results as $rows) {
                             $discount = $rows['market_price'] - $rows['sale_price'];
 
 

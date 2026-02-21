@@ -10,39 +10,49 @@ require __DIR__ . '/../../vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+require_once __DIR__ . '/../../model/SenangPaySetting.php';
+require_once __DIR__ . '/../../model/Order.php';
+require_once __DIR__ . '/../../model/CartLock.php';
+require_once __DIR__ . '/../../model/Cart.php';
+require_once __DIR__ . '/../../model/OrderDetail.php';
+
 class BotSenangpayCotroller
 {
+    private $conn;
+    private $senangPayModel;
+    private $orderModel;
+    private $cartLockModel;
+    private $cartModel;
+    private $orderDetailModel;
+
+    public function __construct()
+    {
+        $this->conn = getDbConnection();
+        $this->senangPayModel = new \SenangPaySetting($this->conn);
+        $this->orderModel = new \Order($this->conn);
+        $this->cartLockModel = new \CartLock($this->conn);
+        $this->cartModel = new \Cart($this->conn);
+        $this->orderDetailModel = new \OrderDetail($this->conn);
+    }
+
     public function handleBot()
     {
-
-        $conn = getDbConnection();
         $dateNow = dateNow();
         $domainURL = getMainUrl();
 
-        $getSenangPay = $conn->query("SELECT * FROM `senangpay_api` ORDER BY id DESC LIMIT 1");
-        $dataSenangPay = $getSenangPay->fetch_array();
+        $credentials = $this->senangPayModel->getCredentials();
+        $merchant_id = $credentials['merchant_id'];
+        $secret_key = $credentials['secret_key'];
+        $urlsubmit = $credentials['url'];
 
-        if ($dataSenangPay["type"] == 'sandbox') {
-            $merchant_id = $dataSenangPay["merchant_id"];
-            $secret_key  = $dataSenangPay["secret_key"];
-            $urlsubmit = $dataSenangPay["sandbox_url"];
-            //echo "sandbox<br><br>";
-        } else {
-            $merchant_id = $dataSenangPay["pro_merchant_id"];
-            $secret_key  = $dataSenangPay["pro_secret_key"];
-            $urlsubmit = $dataSenangPay["production_url"];
-            //echo "Production<br><br>";
-        }
-
-        $pendingPayments = $conn->query("SELECT * FROM customer_orders WHERE status = '10' AND payment_code != 'nill' AND deleted_at IS NULL ORDER BY created_at ASC LIMIT 10");
+        $pendingPayments = $this->orderModel->getPendingPayments(10);
 
         $x = 1;
-        while ($order = $pendingPayments->fetch_array()) {
+        foreach ($pendingPayments as $order) {
             $orderId = $order['id'];
             $orderAmount = $order['myr_value_include_postage'];
             $dateCreated = $order['created_at'];
             $paymentCode = $order['payment_code'];
-
 
             $dataOrder = getOrder(1, $orderId);
 
@@ -82,8 +92,6 @@ class BotSenangpayCotroller
 
             $isPaid = false;
 
-
-
             date_default_timezone_set('Asia/Kuala_Lumpur');
 
             foreach ($dataResponse['data'] as $row) {
@@ -94,7 +102,6 @@ class BotSenangpayCotroller
                     $method = $row['payment_info']['payment_mode'];
                     $transaction_reference = $row['payment_info']['transaction_reference'];
                     $transaction_date = $row['payment_info']['transaction_date'];
-
 
                     break;
                 }
@@ -120,16 +127,15 @@ class BotSenangpayCotroller
 
             if ($payment['status'] == 'paid') {
 
-                $conn->query("UPDATE `customer_orders` SET `status`='1', `payment_channel`='" . $payment['payment_mode'] . "', `payment_code`='" . $payment['transaction_reference'] . "', `payment_url`='" . $payment['transaction_reference'] . "', `updated_at`='$transactionDate' WHERE `id`='" . $orderId . "'");
+                $this->orderModel->updatePaymentFromBot($orderId, $payment['payment_mode'], $payment['transaction_reference'], $transactionDate);
 
-                $getCartLock = $conn->query("SELECT * FROM `cart_lock_senangpay` WHERE `session_id`='" . $dataOrder["session_id"] . "' AND deleted_at IS NULL");
-                foreach ($getCartLock as $cartLockItem) {
-
-                    $conn->query("UPDATE `cart` SET `updated_at`='$transactionDate', `deleted_at`=NULL, `status`='1' WHERE `id`='" . $cartLockItem["cart_id"] . "'");
+                $cartLockItems = $this->cartLockModel->getActiveBySession($dataOrder["session_id"]);
+                foreach ($cartLockItems as $cartLockItem) {
+                    $this->cartModel->restoreAndMarkPaid($cartLockItem["cart_id"], $transactionDate);
                 }
 
                 $hashOrder = hash("sha256", $orderId . "_" . $dataOrder['customer_name'] . "_" . $dateNow);
-                $conn->query("INSERT INTO order_details(order_id, hash_code, created_at) VALUES ('$orderId','$hashOrder','$dateNow')");
+                $this->orderDetailModel->createDetail($orderId, $hashOrder, $dateNow);
 
                 $emailData = [
                     'CustomerName' => $dataOrder['customer_name'],
@@ -161,18 +167,10 @@ class BotSenangpayCotroller
                 } catch (Exception $e) {
                     error_log("❌ Mail error: {$mail->ErrorInfo}");
                 }
-                //update order status to paid
-                //$updateOrder = $conn->query("UPDATE `customer_orders` SET `status` = 1, `payment_channel` = 'senangpay', `updated_at` = NOW() WHERE `id` = '$orderId'");
                 $btn = "<span style='color:green;font-weight:bold;'>PAID</span>";
             } else {
-                //$updateOrder = $conn->query("UPDATE `customer_orders` SET `status` = 10, `updated_at` = NOW() WHERE `id` = '$orderId'");      
                 $btn = "<span style='color:red;font-weight:bold;'>UNPAID</span>";
             }
-
-
-
-            //echo $countPayment."<br>";
-
 
             echo "$x) Order ID = $orderId ($dateCreated), Amount = RM $orderAmount <br>Ref: " . $payment['transaction_reference'] . "<br>Status: " . $btn . " (" . $payment['payment_mode'] . ") on " . $transactionDate . "<br><br>";
 

@@ -18,4 +18,11 @@ class OrderDetail extends BaseModel
         $rows = $this->query($sql, "s", [$orderId]);
         return $rows[0] ?? null;
     }
+
+    public function findByHashCode($hashCode)
+    {
+        $sql = "SELECT * FROM `order_details` WHERE `hash_code` = ?";
+        $rows = $this->query($sql, "s", [$hashCode]);
+        return $rows[0] ?? null;
+    }
 }

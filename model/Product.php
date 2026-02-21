@@ -195,4 +195,44 @@ class Product extends BaseModel
                 LIMIT ?";
         return $this->query($sql, "i", [$limit]);
     }
+
+    public function getByCategoryId($categoryId)
+    {
+        $sql = "SELECT * FROM `products` WHERE `category_id` = ? AND `status` = '1' AND `deleted_at` IS NULL ORDER BY `created_at`";
+        return $this->query($sql, "s", [$categoryId]);
+    }
+
+    public function getByBrandId($brandId)
+    {
+        $sql = "SELECT * FROM `products` WHERE `brand_id` = ? AND `status` = '1' AND `deleted_at` IS NULL ORDER BY `created_at`";
+        return $this->query($sql, "s", [$brandId]);
+    }
+
+    public function getPromoItems($countryId, $limit = 20)
+    {
+        $sql = "
+            SELECT
+                p.id AS product_id, p.name AS product_name, p.slug,
+                cpp.market_price, cpp.sale_price, cpp.country_id
+            FROM list_country_product_price cpp
+            JOIN products p ON cpp.product_id = p.id
+            WHERE cpp.country_id = ? AND cpp.market_price > cpp.sale_price
+                AND p.status = '1' AND p.deleted_at IS NULL
+            ORDER BY (cpp.market_price - cpp.sale_price) DESC
+            LIMIT ?
+        ";
+        return $this->query($sql, "si", [$countryId, $limit]);
+    }
+
+    public function slugExists($slug, $excludeId = null)
+    {
+        if ($excludeId) {
+            $sql = "SELECT COUNT(*) AS cnt FROM `products` WHERE `id` != ? AND `slug` = ?";
+            $rows = $this->query($sql, "is", [$excludeId, $slug]);
+        } else {
+            $sql = "SELECT COUNT(*) AS cnt FROM `products` WHERE `slug` = ?";
+            $rows = $this->query($sql, "s", [$slug]);
+        }
+        return (int) ($rows[0]['cnt'] ?? 0) > 0;
+    }
 }

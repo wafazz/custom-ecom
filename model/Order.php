@@ -325,4 +325,23 @@ class Order extends BaseModel
         $rows = $this->query($sql);
         return (int) ($rows[0]['total'] ?? 0);
     }
+
+    public function findByIdAndEmail($id, $email)
+    {
+        $sql = "SELECT * FROM `customer_orders` WHERE `id` = ? AND `customer_email` = ? AND `status` IN(1,2,3,4,5,6) AND `deleted_at` IS NULL";
+        $rows = $this->query($sql, "ss", [$id, $email]);
+        return $rows[0] ?? null;
+    }
+
+    public function getPendingPayments($limit = 10)
+    {
+        $sql = "SELECT * FROM `customer_orders` WHERE `status` = '10' AND `payment_code` != 'nill' AND `deleted_at` IS NULL ORDER BY `created_at` ASC LIMIT ?";
+        return $this->query($sql, "i", [$limit]);
+    }
+
+    public function updatePaymentFromBot($orderId, $paymentMode, $transRef, $transDate)
+    {
+        $sql = "UPDATE `customer_orders` SET `status` = '1', `payment_channel` = ?, `payment_code` = ?, `payment_url` = ?, `updated_at` = ? WHERE `id` = ?";
+        return $this->execute($sql, "ssssi", [$paymentMode, $transRef, $transRef, $transDate, $orderId]);
+    }
 }

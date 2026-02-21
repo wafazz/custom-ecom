@@ -26,8 +26,8 @@ include "e-menu-keya88.php";
     <div class="container">
         <div class="row">
 
-            <?php if ($result && $result->num_rows > 0): ?>
-                <?php while ($row = $result->fetch_assoc()): ?>
+            <?php if (!empty($result)): ?>
+                <?php foreach ($result as $row): ?>
 
                     <?php
                     $plainText = html_entity_decode(strip_tags($row['contents']), ENT_QUOTES | ENT_HTML5);
@@ -69,7 +69,7 @@ include "e-menu-keya88.php";
                         </div>
                     </div>
 
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             <?php else: ?>
                 <div class="col-lg-12">
                     <p>No announcement available.</p>
