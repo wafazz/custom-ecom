@@ -578,6 +578,172 @@ class SettingController
         }
     }
 
+    public function settingNinjaVan()
+    {
+        $domainURL = getMainUrl();
+        $mainDomain = mainDomain();
+        $conn = getDbConnection();
+
+        $options = getSelectOptions();
+        $country = allSaleCountry();
+
+        $currentYear = currentYear();
+        $dateNow = dateNow();
+        $pageName = "NinjaVan Setting";
+
+        $ninjavan = dataSettingNinjaVan();
+
+        require_once __DIR__ . '/../../view/Admin/ninjavan-setting.php';
+    }
+
+    public function saveNinjaVan()
+    {
+        $domainURL = getMainUrl();
+        $mainDomain = mainDomain();
+        $conn = getDbConnection();
+
+        $options = getSelectOptions();
+        $country = allSaleCountry();
+
+        $currentYear = currentYear();
+        $dateNow = dateNow();
+
+        $ninjavan = dataSettingNinjaVan();
+
+        if (isset($_POST["saveAPI"])) {
+            $production_sandbox = $_POST["production_sandbox"];
+
+            $update = $conn->query("UPDATE ninjavan_setting SET `production_sandbox`='$production_sandbox' WHERE id='1'");
+
+            if ($update and $production_sandbox == 1) {
+                $_SESSION['upload_success'] = "Successful activate NinjaVan to Production Mode";
+            } else if ($update and $production_sandbox == 0) {
+                $_SESSION['upload_success'] = "Successful deactivate NinjaVan and set to Sandbox Mode";
+            } else {
+                $_SESSION['upload_error'] = "Sorry! Invalid data/parameter to update NinjaVan status.";
+            }
+
+            header("Location: {$domainURL}ninjavan-setting");
+        }
+
+        if (isset($_POST["saveSandbox"])) {
+            $username = $_POST["username"];
+            $password = $_POST["password"];
+            $cuscode = $_POST["cuscode"];
+            $key = $_POST["key"];
+
+            $update = $conn->query("UPDATE ninjavan_setting SET `username_sanbox`='$username', `password_sandbox`='$password', `cuscode_sandbox`='$cuscode', `key_sandbox`='$key' WHERE id='1'");
+
+            if ($update) {
+                $_SESSION['upload_success'] = "Successful update data in Sandbox Mode";
+            } else {
+                $_SESSION['upload_error'] = "Sorry! Failed to update data in Sandbox Mode.";
+            }
+
+            header("Location: {$domainURL}ninjavan-setting");
+        }
+
+        if (isset($_POST["saveProduction"])) {
+            $username = $_POST["username"];
+            $password = $_POST["password"];
+            $cuscode = $_POST["cuscode"];
+            $key = $_POST["key"];
+
+            $update = $conn->query("UPDATE ninjavan_setting SET `username_production`='$username', `password_production`='$password', `cuscode_production`='$cuscode', `key_production`='$key' WHERE id='1'");
+
+            if ($update) {
+                $_SESSION['upload_success'] = "Successful update data in Production Mode";
+            } else {
+                $_SESSION['upload_error'] = "Sorry! Failed to update data in Production Mode.";
+            }
+
+            header("Location: {$domainURL}ninjavan-setting");
+        }
+    }
+
+    public function settingPosLaju()
+    {
+        $domainURL = getMainUrl();
+        $mainDomain = mainDomain();
+        $conn = getDbConnection();
+
+        $options = getSelectOptions();
+        $country = allSaleCountry();
+
+        $currentYear = currentYear();
+        $dateNow = dateNow();
+        $pageName = "Pos Laju Setting";
+
+        $poslaju = dataSettingPosLaju();
+
+        require_once __DIR__ . '/../../view/Admin/poslaju-setting.php';
+    }
+
+    public function savePosLaju()
+    {
+        $domainURL = getMainUrl();
+        $mainDomain = mainDomain();
+        $conn = getDbConnection();
+
+        $options = getSelectOptions();
+        $country = allSaleCountry();
+
+        $currentYear = currentYear();
+        $dateNow = dateNow();
+
+        $poslaju = dataSettingPosLaju();
+
+        if (isset($_POST["saveAPI"])) {
+            $production_sandbox = $_POST["production_sandbox"];
+
+            $update = $conn->query("UPDATE poslaju_setting SET `production_sandbox`='$production_sandbox' WHERE id='1'");
+
+            if ($update and $production_sandbox == 1) {
+                $_SESSION['upload_success'] = "Successful activate Pos Laju to Production Mode";
+            } else if ($update and $production_sandbox == 0) {
+                $_SESSION['upload_success'] = "Successful deactivate Pos Laju and set to Sandbox Mode";
+            } else {
+                $_SESSION['upload_error'] = "Sorry! Invalid data/parameter to update Pos Laju status.";
+            }
+
+            header("Location: {$domainURL}poslaju-setting");
+        }
+
+        if (isset($_POST["saveSandbox"])) {
+            $username = $_POST["username"];
+            $password = $_POST["password"];
+            $cuscode = $_POST["cuscode"];
+            $key = $_POST["key"];
+
+            $update = $conn->query("UPDATE poslaju_setting SET `username_sanbox`='$username', `password_sandbox`='$password', `cuscode_sandbox`='$cuscode', `key_sandbox`='$key' WHERE id='1'");
+
+            if ($update) {
+                $_SESSION['upload_success'] = "Successful update data in Sandbox Mode";
+            } else {
+                $_SESSION['upload_error'] = "Sorry! Failed to update data in Sandbox Mode.";
+            }
+
+            header("Location: {$domainURL}poslaju-setting");
+        }
+
+        if (isset($_POST["saveProduction"])) {
+            $username = $_POST["username"];
+            $password = $_POST["password"];
+            $cuscode = $_POST["cuscode"];
+            $key = $_POST["key"];
+
+            $update = $conn->query("UPDATE poslaju_setting SET `username_production`='$username', `password_production`='$password', `cuscode_production`='$cuscode', `key_production`='$key' WHERE id='1'");
+
+            if ($update) {
+                $_SESSION['upload_success'] = "Successful update data in Production Mode";
+            } else {
+                $_SESSION['upload_error'] = "Sorry! Failed to update data in Production Mode.";
+            }
+
+            header("Location: {$domainURL}poslaju-setting");
+        }
+    }
+
     public function changePassword()
     {
         $domainURL = getMainUrl();

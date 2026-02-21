@@ -2120,6 +2120,58 @@ function dataSettingJNT()
     return ($data);
 }
 
+function dataSettingNinjaVan()
+{
+    $conn = getDbConnection();
+
+    $sql = "SELECT `production_sandbox`, `url_sandbox`, `username_sanbox`, `password_sandbox`, `cuscode_sandbox`, `key_sandbox`, `url_production`, `username_production`, `password_production`, `cuscode_production`, `key_production` FROM `ninjavan_setting` WHERE id='1'";
+
+    $query = $conn->query($sql);
+    $row = $query->fetch_array();
+
+    $data = [
+        "status" => $row["production_sandbox"],
+        "url_sandbox" => $row["url_sandbox"],
+        "username_sanbox" => $row["username_sanbox"],
+        "password_sandbox" => $row["password_sandbox"],
+        "cuscode_sandbox" => $row["cuscode_sandbox"],
+        "key_sandbox" => $row["key_sandbox"],
+        "url_production" => $row["url_production"],
+        "username_production" => $row["username_production"],
+        "password_production" => $row["password_production"],
+        "cuscode_production" => $row["cuscode_production"],
+        "key_production" => $row["key_production"]
+    ];
+
+    return ($data);
+}
+
+function dataSettingPosLaju()
+{
+    $conn = getDbConnection();
+
+    $sql = "SELECT `production_sandbox`, `url_sandbox`, `username_sanbox`, `password_sandbox`, `cuscode_sandbox`, `key_sandbox`, `url_production`, `username_production`, `password_production`, `cuscode_production`, `key_production` FROM `poslaju_setting` WHERE id='1'";
+
+    $query = $conn->query($sql);
+    $row = $query->fetch_array();
+
+    $data = [
+        "status" => $row["production_sandbox"],
+        "url_sandbox" => $row["url_sandbox"],
+        "username_sanbox" => $row["username_sanbox"],
+        "password_sandbox" => $row["password_sandbox"],
+        "cuscode_sandbox" => $row["cuscode_sandbox"],
+        "key_sandbox" => $row["key_sandbox"],
+        "url_production" => $row["url_production"],
+        "username_production" => $row["username_production"],
+        "password_production" => $row["password_production"],
+        "cuscode_production" => $row["cuscode_production"],
+        "key_production" => $row["key_production"]
+    ];
+
+    return ($data);
+}
+
 function sendSecurityCode(string $toEmail, int $code): bool
 {
     $templatePath = __DIR__ . '/../EmailTemplate/securityCodeTemp.php';

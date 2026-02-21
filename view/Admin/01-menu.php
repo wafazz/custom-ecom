@@ -25,7 +25,7 @@ $rowLogo = $queryLogo->fetch_assoc();
 
       $salesMenu   = ['new-order', 'process-order', 'indelivery-order', 'completed-order', 'returned-order', 'cancelled-order', 'database-order'];
       $productMenu = ['category-product', 'brand-product', 'new-product', 'stock-control'];
-      $settingMenu = ['fiuu-setting', 'dhl-setting', 'jt-express', 'setting-policy', 'setting-terms', 'setting-about-us', 'logo-setting'];
+      $settingMenu = ['fiuu-setting', 'dhl-setting', 'jt-express', 'ninjavan-setting', 'poslaju-setting', 'setting-policy', 'setting-terms', 'setting-about-us', 'logo-setting'];
       $deliveryMenu = ['my-west', 'my-east', 'del-internatinal'];
       $countryMenu = ['list-country', 'add-new-country'];
       $searchMenu = ['search-order'];
