@@ -203,6 +203,60 @@
 
 
 
+<!-- PWA Install Banner -->
+<div id="pwa-install-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#111; color:#fff; padding:12px 20px; z-index:9999; align-items:center; justify-content:space-between; font-family:'Montserrat',sans-serif; font-size:14px;">
+    <span>Install Shaniena Empire app for a better experience</span>
+    <div>
+        <button id="pwa-install-btn" style="background:#e53637; color:#fff; border:none; padding:8px 20px; border-radius:4px; font-size:13px; font-weight:600; cursor:pointer; margin-right:8px;">Install App</button>
+        <button id="pwa-dismiss-btn" style="background:none; color:#999; border:none; font-size:13px; cursor:pointer;">Not now</button>
+    </div>
+</div>
+
+<script>
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+        .then(function(reg) { console.log('SW registered', reg.scope); })
+        .catch(function(err) { console.log('SW failed', err); });
+}
+
+// PWA Install Prompt
+(function() {
+    var deferredPrompt = null;
+    var banner = document.getElementById('pwa-install-banner');
+    var installBtn = document.getElementById('pwa-install-btn');
+    var dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+    var dismissed = localStorage.getItem('pwa-dismiss-time');
+    if (dismissed && (Date.now() - parseInt(dismissed)) < 7 * 24 * 60 * 60 * 1000) return;
+
+    window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        banner.style.display = 'flex';
+    });
+
+    installBtn.addEventListener('click', function() {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function() {
+            deferredPrompt = null;
+            banner.style.display = 'none';
+        });
+    });
+
+    dismissBtn.addEventListener('click', function() {
+        banner.style.display = 'none';
+        localStorage.setItem('pwa-dismiss-time', Date.now().toString());
+    });
+
+    window.addEventListener('appinstalled', function() {
+        banner.style.display = 'none';
+        deferredPrompt = null;
+    });
+})();
+</script>
+
 </body>
 
 </html>

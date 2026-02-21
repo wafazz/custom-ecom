@@ -1,0 +1,22 @@
+{
+    "name": "Shaniena Empire",
+    "short_name": "Shaniena",
+    "description": "Shaniena Empire Store",
+    "start_url": "/main",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#e53637",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/assets/images/r-web-logo.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/assets/images/r-web-logo.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

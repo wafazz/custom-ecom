@@ -88,8 +88,13 @@ $listCart2 = cartList();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="apple-touch-icon" sizes="76x76" href="<?= $domainURL; ?>assets/images/r-web-logo.png">
     <link rel="icon" type="image/png" href="<?= $domainURL; ?>assets/images/r-web-logo.png">
+    <link rel="manifest" href="<?= $domainURL ?>manifest.json">
+    <meta name="theme-color" content="#e53637">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Shaniena Empire">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>ECOM@Rozeyana.com</title>
+    <title>Shaniena Empire</title>
 
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Cookie&display=swap" rel="stylesheet">
