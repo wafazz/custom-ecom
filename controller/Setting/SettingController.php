@@ -3,6 +3,13 @@
 namespace Setting;
 
 require_once __DIR__ . '/../../config/mainConfig.php';
+require_once __DIR__ . '/../../model/PageContent.php';
+require_once __DIR__ . '/../../model/CourierSetting.php';
+require_once __DIR__ . '/../../model/PostageCost.php';
+require_once __DIR__ . '/../../model/CodCharge.php';
+require_once __DIR__ . '/../../model/NewsBlog.php';
+require_once __DIR__ . '/../../model/ImageSetting.php';
+require_once __DIR__ . '/../../model/MemberHq.php';
 
 class SettingController
 {
@@ -14,6 +21,14 @@ class SettingController
     private $currentYear;
     private $dateNow;
 
+    private $pageContent;
+    private $courierSetting;
+    private $postageCost;
+    private $codCharge;
+    private $newsBlog;
+    private $imageSetting;
+    private $memberHq;
+
     public function __construct()
     {
         if (!is_login()) {
@@ -21,133 +36,96 @@ class SettingController
             exit;
         }
 
-        $this->domainURL  = getMainUrl();
-        $this->mainDomain = mainDomain();
-        $this->conn       = getDbConnection();
-        $this->options    = getSelectOptions();
-        $this->country    = allSaleCountry();
+        $this->domainURL   = getMainUrl();
+        $this->mainDomain  = mainDomain();
+        $this->conn        = getDbConnection();
+        $this->options     = getSelectOptions();
+        $this->country     = allSaleCountry();
         $this->currentYear = currentYear();
         $this->dateNow     = dateNow();
+
+        $this->pageContent    = new \PageContent($this->conn);
+        $this->courierSetting = new \CourierSetting($this->conn);
+        $this->postageCost    = new \PostageCost($this->conn);
+        $this->codCharge      = new \CodCharge($this->conn);
+        $this->newsBlog       = new \NewsBlog($this->conn);
+        $this->imageSetting   = new \ImageSetting($this->conn);
+        $this->memberHq       = new \MemberHq($this->conn);
+    }
+
+    private function checkAccess($segment = null)
+    {
+        if ($segment === null) {
+            $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+            $segments = explode('/', $currentPaths);
+            $segment = $segments[0];
+        }
+        if (roleVerify($segment, $_SESSION['user']->id) == 0) {
+            header("Location: " . $this->domainURL . "access-denied");
+            exit;
+        }
     }
 
     public function policy()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $this->checkAccess();
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
 
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
         $pageName = "Policy - Setting";
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-        $sql = "SELECT * FROM `policy`";
-        $query = $this->conn->query($sql);
-        $row = $query->fetch_array();
+        $row = $this->pageContent->getContent('policy');
 
         require_once __DIR__ . '/../../view/Admin/policy.php';
     }
 
     public function terms()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $this->checkAccess();
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
 
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
         $pageName = "Terms & Conditions - Setting";
-        $sql = "SELECT * FROM `terms_conditions`";
-        $query = $this->conn->query($sql);
-        $row = $query->fetch_array();
+        $row = $this->pageContent->getContent('terms_conditions');
 
         require_once __DIR__ . '/../../view/Admin/terms.php';
     }
 
     public function aboutUs()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $this->checkAccess();
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
 
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
         $pageName = "About Us - Setting";
-        $sql = "SELECT * FROM `about_us`";
-        $query = $this->conn->query($sql);
-        $row = $query->fetch_array();
+        $row = $this->pageContent->getContent('about_us');
 
         require_once __DIR__ . '/../../view/Admin/about.php';
     }
 
     public function updatePolicy()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $this->checkAccess();
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-        $description = $this->conn->real_escape_string($_POST['description'] ?? '');
-        $this->conn->query("UPDATE `policy` SET `description`='$description', updated_at='{$this->dateNow}' WHERE id='1'");
+        $description = $_POST['description'] ?? '';
+        $this->pageContent->updateContent('policy', $description, $this->dateNow);
 
         $_SESSION['upload_success'] = 'Successful updated <b>Policy</b>.';
         header("Location: {$this->domainURL}setting-policy");
@@ -155,29 +133,10 @@ class SettingController
 
     public function updateTerms()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $this->checkAccess();
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-        $description = $this->conn->real_escape_string($_POST['description'] ?? '');
-        $this->conn->query("UPDATE `terms_conditions` SET `description`='$description', updated_at='{$this->dateNow}' WHERE id='1'");
+        $description = $_POST['description'] ?? '';
+        $this->pageContent->updateContent('terms_conditions', $description, $this->dateNow);
 
         $_SESSION['upload_success'] = 'Successful updated <b>Terms & Conditions</b>.';
         header("Location: {$this->domainURL}setting-terms");
@@ -185,29 +144,10 @@ class SettingController
 
     public function updateAboutUs()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $this->checkAccess();
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-        $description = $this->conn->real_escape_string($_POST['description'] ?? '');
-        $this->conn->query("UPDATE `about_us` SET `description`='$description', updated_at='{$this->dateNow}' WHERE id='1'");
+        $description = $_POST['description'] ?? '';
+        $this->pageContent->updateContent('about_us', $description, $this->dateNow);
 
         $_SESSION['upload_success'] = 'Successful updated <b>About Us</b>.';
         header("Location: {$this->domainURL}setting-about-us");
@@ -215,61 +155,37 @@ class SettingController
 
     public function deliveryCharge()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $this->checkAccess();
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
 
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
         $pageName = "Shipping Cost";
 
-        $sql     = "SELECT * FROM `postage_cost` ORDER BY id ASC";
-        $result  = $this->conn->query($sql);
+        $postageCosts = $this->postageCost->getAll();
+        $codCharges   = $this->codCharge->findAll([], 'country_id ASC, shipping_zone ASC');
 
-        $sqls    = "SELECT * FROM `list_country` ORDER BY id ASC";
-        $results = $this->conn->query($sqls);
+        $stmt = $this->conn->prepare("SELECT * FROM `list_country` ORDER BY id ASC");
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $countries = [];
+        while ($r = $res->fetch_assoc()) {
+            $countries[] = $r;
+        }
+        $stmt->close();
 
         require_once __DIR__ . '/../../view/Admin/shipping.php';
     }
 
     public function saveDeliveryCharge()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $this->checkAccess();
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
         $countryID = $_POST["country"] ?? "";
         $zone      = $_POST["szone"] ?? "1";
         $fkilo     = $_POST["fkilo"] ?? "";
@@ -278,14 +194,13 @@ class SettingController
         $dataCountry = getCountryP($countryID);
         $curSign     = $dataCountry["sign"];
 
-        $validate = $this->conn->query("SELECT * FROM postage_cost WHERE country_id='$countryID' AND shipping_zone='$zone'");
+        $existing = $this->postageCost->findByCountryZone($countryID, $zone);
 
-        if ($validate->num_rows > 0) {
-            $this->conn->query("UPDATE postage_cost SET currency='$curSign', first_kilo='$fkilo', next_kilo='$nkilo', updated_at='{$this->dateNow}' WHERE country_id='$countryID' AND shipping_zone='$zone'");
+        if ($existing) {
+            $this->postageCost->upsert($countryID, $zone, $curSign, $fkilo, $nkilo, $this->dateNow);
             $_SESSION['upload_success'] = 'Successfully updated shipping cost for ' . $dataCountry["name"];
         } else {
-            $this->conn->query("INSERT INTO `postage_cost`(`id`, `country_id`, `shipping_zone`, `currency`, `first_kilo`, `next_kilo`, `created_at`, `updated_at`) 
-                VALUES (NULL,'$countryID','$zone','$curSign','$fkilo','$nkilo','{$this->dateNow}','{$this->dateNow}')");
+            $this->postageCost->upsert($countryID, $zone, $curSign, $fkilo, $nkilo, $this->dateNow);
             $_SESSION['upload_success'] = 'Successfully added new shipping cost for ' . $dataCountry["name"];
         }
 
@@ -294,92 +209,71 @@ class SettingController
 
     public function saveCodCharge()
     {
-        $conn = getDbConnection();
-        $dateNow = dateNow();
-
-        $countryId = $_POST["country_id"] ?? "";
-        $shippingZone = $_POST["shipping_zone"] ?? "1";
+        $countryId       = $_POST["country_id"] ?? "";
+        $shippingZone    = $_POST["shipping_zone"] ?? "1";
         $benchmarkAmount = $_POST["benchmark_amount"] ?? "0";
-        $codFeeBelow = $_POST["cod_fee_below"] ?? "0";
-        $codFeeAbove = $_POST["cod_fee_above"] ?? "0";
+        $codFeeBelow     = $_POST["cod_fee_below"] ?? "0";
+        $codFeeAbove     = $_POST["cod_fee_above"] ?? "0";
 
         if (empty($countryId)) {
             $_SESSION['upload_success'] = 'Please fill in all required fields.';
-            header("Location: " . getMainUrl() . "delivery-charge");
+            header("Location: {$this->domainURL}delivery-charge");
             return;
         }
 
-        $existing = $conn->query("SELECT * FROM `cod_charges` WHERE `country_id`='$countryId' AND `shipping_zone`='$shippingZone'");
-        if ($existing->num_rows > 0) {
-            $conn->query("UPDATE `cod_charges` SET `benchmark_amount`='$benchmarkAmount', `cod_fee_below`='$codFeeBelow', `cod_fee_above`='$codFeeAbove', `updated_at`='$dateNow' WHERE `country_id`='$countryId' AND `shipping_zone`='$shippingZone'");
+        $existing = $this->codCharge->findByCountryZone($countryId, $shippingZone);
+
+        if ($existing) {
+            $this->codCharge->upsert($countryId, $shippingZone, $benchmarkAmount, $codFeeBelow, $codFeeAbove, $this->dateNow);
             $_SESSION['upload_success'] = 'COD charge updated successfully.';
         } else {
-            $conn->query("INSERT INTO `cod_charges` (`country_id`, `shipping_zone`, `benchmark_amount`, `cod_fee_below`, `cod_fee_above`, `created_at`, `updated_at`) VALUES ('$countryId', '$shippingZone', '$benchmarkAmount', '$codFeeBelow', '$codFeeAbove', '$dateNow', '$dateNow')");
+            $this->codCharge->upsert($countryId, $shippingZone, $benchmarkAmount, $codFeeBelow, $codFeeAbove, $this->dateNow);
             $_SESSION['upload_success'] = 'COD charge added successfully.';
         }
 
-        header("Location: " . getMainUrl() . "delivery-charge");
+        header("Location: {$this->domainURL}delivery-charge");
     }
 
     public function deleteCodCharge($id)
     {
-        $conn = getDbConnection();
-        $conn->query("DELETE FROM `cod_charges` WHERE `id`='$id'");
+        $this->codCharge->deleteById($id);
 
         $_SESSION['upload_success'] = 'COD charge deleted.';
-        header("Location: " . getMainUrl() . "delivery-charge");
+        header("Location: {$this->domainURL}delivery-charge");
     }
 
     public function indexAnnouncement()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $this->checkAccess();
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
 
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
         $pageName = "Announcement & Blog";
-
-        $listNews = $conn->query("SELECT * FROM news_blog WHERE deleted_at IS NULL ORDER BY id DESC");
+        $listNews = $this->newsBlog->getAll();
 
         require_once __DIR__ . '/../../view/Admin/announcement.php';
     }
 
     public function saveAnnouncement()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $title       = $_POST['title'] ?? '';
+        $description = $_POST['description'] ?? '';
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
+        $result = $this->newsBlog->createPost([
+            'post_by'    => $_SESSION['user']->id,
+            'title'      => $title,
+            'contents'   => $description,
+            'created_at' => $this->dateNow,
+            'updated_at' => $this->dateNow,
+        ]);
 
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-
-        $title = isset($_POST['title']) ? $conn->real_escape_string($_POST['title']) : '';
-        $description = isset($_POST['description']) ? $conn->real_escape_string($_POST['description']) : '';
-
-        $addNews = $conn->query("INSERT INTO `news_blog`(`id`, `post_by`, `update_by`, `title`, `contents`, `created_at`, `updated_at`, `deleted_at`, `reader`) VALUES (NULL,'" . $_SESSION['user']->id . "','','$title','$description','$dateNow','$dateNow',NULL,'')");
-
-        if ($addNews) {
+        if ($result) {
             $_SESSION['upload_success'] = "Successful add new announcement";
         } else {
             $_SESSION['upload_error'] = "Sorry! Failed to add new announcement";
@@ -391,61 +285,47 @@ class SettingController
 
     public function updateAnnouncement($id)
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
 
         $pageName = "Announcement & Blog (Update)";
+        $row = $this->newsBlog->getById($id);
 
-        $getNews = $conn->query("SELECT * FROM news_blog WHERE id='$id' AND deleted_at IS NULL");
-
-        if ($getNews->num_rows != "1") {
+        if (!$row) {
             $_SESSION['upload_error'] = "Sorry! Invalid data/parameter to update Announcement/Blog.";
             header("Location: {$this->domainURL}announcement-blog");
             exit;
         }
-
-        $row = $getNews->fetch_array();
 
         require_once __DIR__ . '/../../view/Admin/update-announcement.php';
     }
 
     public function saveUpdateAnnouncement($id)
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $title       = $_POST['title'] ?? '';
+        $description = $_POST['description'] ?? '';
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-
-        $title = isset($_POST['title']) ? $conn->real_escape_string($_POST['title']) : '';
-        $description = isset($_POST['description']) ? $conn->real_escape_string($_POST['description']) : '';
-
-        $getNews = $conn->query("SELECT * FROM news_blog WHERE id='$id' AND deleted_at IS NULL");
-        $row = $getNews->fetch_array();
+        $row = $this->newsBlog->getById($id);
 
         if (empty($row["update_by"])) {
-            $updateBy = "[" . $_SESSION['user']->id . "]|" . $dateNow;
+            $updateBy = "[" . $_SESSION['user']->id . "]|" . $this->dateNow;
         } else {
-            $updateBy = $row["update_by"] . ",[" . $_SESSION['user']->id . "]|" . $dateNow;
+            $updateBy = $row["update_by"] . ",[" . $_SESSION['user']->id . "]|" . $this->dateNow;
         }
 
-        $addNews = $conn->query("UPDATE `news_blog` SET `update_by`='$updateBy', `title`='$title' , `contents`='$description', `updated_at`='$dateNow' WHERE id='$id'");
+        $result = $this->newsBlog->updatePost($id, [
+            'update_by'  => $updateBy,
+            'title'      => $title,
+            'contents'   => $description,
+            'updated_at' => $this->dateNow,
+        ]);
 
-        if ($addNews) {
+        if ($result) {
             $_SESSION['upload_success'] = "Successful update announcement";
         } else {
             $_SESSION['upload_error'] = "Sorry! Failed to update announcement";
@@ -457,33 +337,17 @@ class SettingController
 
     public function deleteAnnouncement($id)
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-
-        $title = isset($_POST['title']) ? $conn->real_escape_string($_POST['title']) : '';
-        $description = isset($_POST['description']) ? $conn->real_escape_string($_POST['description']) : '';
-
-        $getNews = $conn->query("SELECT * FROM news_blog WHERE id='$id' AND deleted_at IS NULL");
-        $row = $getNews->fetch_array();
+        $row = $this->newsBlog->getById($id);
 
         if (empty($row["update_by"])) {
-            $updateBy = "[" . $_SESSION['user']->id . "]|" . $dateNow;
+            $updateBy = "[" . $_SESSION['user']->id . "]|" . $this->dateNow;
         } else {
-            $updateBy = $row["update_by"] . ",[" . $_SESSION['user']->id . "]|" . $dateNow;
+            $updateBy = $row["update_by"] . ",[" . $_SESSION['user']->id . "]|" . $this->dateNow;
         }
 
-        $addNews = $conn->query("UPDATE `news_blog` SET `update_by`='$updateBy', `updated_at`='$dateNow', `deleted_at`='$dateNow' WHERE id='$id'");
+        $result = $this->newsBlog->softDeletePost($id, $updateBy, $this->dateNow);
 
-        if ($addNews) {
+        if ($result) {
             $_SESSION['upload_success'] = "Successful update Delete Annpuncement";
         } else {
             $_SESSION['upload_error'] = "Sorry! Failed to delete announcement";
@@ -495,18 +359,15 @@ class SettingController
 
     public function settingJNT()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
         $pageName = "J&T Setting";
-
         $jt = dataSettingJNT();
 
         require_once __DIR__ . '/../../view/Admin/jt-express.php';
@@ -514,23 +375,9 @@ class SettingController
 
     public function saveJNT()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $jt = dataSettingJNT();
-
         if (isset($_POST["saveAPI"])) {
             $production_sandbox = $_POST["production_sandbox"];
-
-            $update = $conn->query("UPDATE jt_setting SET `production_sandbox`='$production_sandbox' WHERE id='1'");
+            $update = $this->courierSetting->updateMode('jt_setting', $production_sandbox);
 
             if ($update and $production_sandbox == 1) {
                 $_SESSION['upload_success'] = "Successful activate J&T Express to Production Mode";
@@ -540,16 +387,17 @@ class SettingController
                 $_SESSION['upload_error'] = "Sorry! Invalid data/parameter to update J&T status.";
             }
 
-            header("Location: {$domainURL}jt-express");
+            header("Location: {$this->domainURL}jt-express");
         }
 
         if (isset($_POST["saveSandbox"])) {
-            $username = $_POST["username"];
-            $password = $_POST["password"];
-            $cuscode = $_POST["cuscode"];
-            $key = $_POST["key"];
-
-            $update = $conn->query("UPDATE jt_setting SET `username_sanbox`='$username', `password_sandbox`='$password', `cuscode_sandbox`='$cuscode', `key_sandbox`='$key' WHERE id='1'");
+            $data = [
+                'username' => $_POST["username"],
+                'password' => $_POST["password"],
+                'cuscode'  => $_POST["cuscode"],
+                'key'      => $_POST["key"],
+            ];
+            $update = $this->courierSetting->updateSandbox('jt_setting', $data);
 
             if ($update) {
                 $_SESSION['upload_success'] = "Successful update data in Sandbox Mode";
@@ -557,16 +405,17 @@ class SettingController
                 $_SESSION['upload_error'] = "Sorry! Failed to update data in Sandbox Mode.";
             }
 
-            header("Location: {$domainURL}jt-express");
+            header("Location: {$this->domainURL}jt-express");
         }
 
         if (isset($_POST["saveProduction"])) {
-            $username = $_POST["username"];
-            $password = $_POST["password"];
-            $cuscode = $_POST["cuscode"];
-            $key = $_POST["key"];
-
-            $update = $conn->query("UPDATE jt_setting SET `username_production`='$username', `password_production`='$password', `cuscode_production`='$cuscode', `key_production`='$key' WHERE id='1'");
+            $data = [
+                'username' => $_POST["username"],
+                'password' => $_POST["password"],
+                'cuscode'  => $_POST["cuscode"],
+                'key'      => $_POST["key"],
+            ];
+            $update = $this->courierSetting->updateProduction('jt_setting', $data);
 
             if ($update) {
                 $_SESSION['upload_success'] = "Successful update data in Production Mode";
@@ -574,23 +423,21 @@ class SettingController
                 $_SESSION['upload_error'] = "Sorry! Failed to update data in Production Mode.";
             }
 
-            header("Location: {$domainURL}jt-express");
+            header("Location: {$this->domainURL}jt-express");
         }
     }
 
     public function settingNinjaVan()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
         $pageName = "NinjaVan Setting";
-
         $ninjavan = dataSettingNinjaVan();
 
         require_once __DIR__ . '/../../view/Admin/ninjavan-setting.php';
@@ -598,22 +445,9 @@ class SettingController
 
     public function saveNinjaVan()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $ninjavan = dataSettingNinjaVan();
-
         if (isset($_POST["saveAPI"])) {
             $production_sandbox = $_POST["production_sandbox"];
-
-            $update = $conn->query("UPDATE ninjavan_setting SET `production_sandbox`='$production_sandbox' WHERE id='1'");
+            $update = $this->courierSetting->updateMode('ninjavan_setting', $production_sandbox);
 
             if ($update and $production_sandbox == 1) {
                 $_SESSION['upload_success'] = "Successful activate NinjaVan to Production Mode";
@@ -623,16 +457,17 @@ class SettingController
                 $_SESSION['upload_error'] = "Sorry! Invalid data/parameter to update NinjaVan status.";
             }
 
-            header("Location: {$domainURL}ninjavan-setting");
+            header("Location: {$this->domainURL}ninjavan-setting");
         }
 
         if (isset($_POST["saveSandbox"])) {
-            $username = $_POST["username"];
-            $password = $_POST["password"];
-            $cuscode = $_POST["cuscode"];
-            $key = $_POST["key"];
-
-            $update = $conn->query("UPDATE ninjavan_setting SET `username_sanbox`='$username', `password_sandbox`='$password', `cuscode_sandbox`='$cuscode', `key_sandbox`='$key' WHERE id='1'");
+            $data = [
+                'username' => $_POST["username"],
+                'password' => $_POST["password"],
+                'cuscode'  => $_POST["cuscode"],
+                'key'      => $_POST["key"],
+            ];
+            $update = $this->courierSetting->updateSandbox('ninjavan_setting', $data);
 
             if ($update) {
                 $_SESSION['upload_success'] = "Successful update data in Sandbox Mode";
@@ -640,16 +475,17 @@ class SettingController
                 $_SESSION['upload_error'] = "Sorry! Failed to update data in Sandbox Mode.";
             }
 
-            header("Location: {$domainURL}ninjavan-setting");
+            header("Location: {$this->domainURL}ninjavan-setting");
         }
 
         if (isset($_POST["saveProduction"])) {
-            $username = $_POST["username"];
-            $password = $_POST["password"];
-            $cuscode = $_POST["cuscode"];
-            $key = $_POST["key"];
-
-            $update = $conn->query("UPDATE ninjavan_setting SET `username_production`='$username', `password_production`='$password', `cuscode_production`='$cuscode', `key_production`='$key' WHERE id='1'");
+            $data = [
+                'username' => $_POST["username"],
+                'password' => $_POST["password"],
+                'cuscode'  => $_POST["cuscode"],
+                'key'      => $_POST["key"],
+            ];
+            $update = $this->courierSetting->updateProduction('ninjavan_setting', $data);
 
             if ($update) {
                 $_SESSION['upload_success'] = "Successful update data in Production Mode";
@@ -657,23 +493,21 @@ class SettingController
                 $_SESSION['upload_error'] = "Sorry! Failed to update data in Production Mode.";
             }
 
-            header("Location: {$domainURL}ninjavan-setting");
+            header("Location: {$this->domainURL}ninjavan-setting");
         }
     }
 
     public function settingPosLaju()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
         $pageName = "Pos Laju Setting";
-
         $poslaju = dataSettingPosLaju();
 
         require_once __DIR__ . '/../../view/Admin/poslaju-setting.php';
@@ -681,22 +515,9 @@ class SettingController
 
     public function savePosLaju()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $poslaju = dataSettingPosLaju();
-
         if (isset($_POST["saveAPI"])) {
             $production_sandbox = $_POST["production_sandbox"];
-
-            $update = $conn->query("UPDATE poslaju_setting SET `production_sandbox`='$production_sandbox' WHERE id='1'");
+            $update = $this->courierSetting->updateMode('poslaju_setting', $production_sandbox);
 
             if ($update and $production_sandbox == 1) {
                 $_SESSION['upload_success'] = "Successful activate Pos Laju to Production Mode";
@@ -706,16 +527,17 @@ class SettingController
                 $_SESSION['upload_error'] = "Sorry! Invalid data/parameter to update Pos Laju status.";
             }
 
-            header("Location: {$domainURL}poslaju-setting");
+            header("Location: {$this->domainURL}poslaju-setting");
         }
 
         if (isset($_POST["saveSandbox"])) {
-            $username = $_POST["username"];
-            $password = $_POST["password"];
-            $cuscode = $_POST["cuscode"];
-            $key = $_POST["key"];
-
-            $update = $conn->query("UPDATE poslaju_setting SET `username_sanbox`='$username', `password_sandbox`='$password', `cuscode_sandbox`='$cuscode', `key_sandbox`='$key' WHERE id='1'");
+            $data = [
+                'username' => $_POST["username"],
+                'password' => $_POST["password"],
+                'cuscode'  => $_POST["cuscode"],
+                'key'      => $_POST["key"],
+            ];
+            $update = $this->courierSetting->updateSandbox('poslaju_setting', $data);
 
             if ($update) {
                 $_SESSION['upload_success'] = "Successful update data in Sandbox Mode";
@@ -723,16 +545,17 @@ class SettingController
                 $_SESSION['upload_error'] = "Sorry! Failed to update data in Sandbox Mode.";
             }
 
-            header("Location: {$domainURL}poslaju-setting");
+            header("Location: {$this->domainURL}poslaju-setting");
         }
 
         if (isset($_POST["saveProduction"])) {
-            $username = $_POST["username"];
-            $password = $_POST["password"];
-            $cuscode = $_POST["cuscode"];
-            $key = $_POST["key"];
-
-            $update = $conn->query("UPDATE poslaju_setting SET `username_production`='$username', `password_production`='$password', `cuscode_production`='$cuscode', `key_production`='$key' WHERE id='1'");
+            $data = [
+                'username' => $_POST["username"],
+                'password' => $_POST["password"],
+                'cuscode'  => $_POST["cuscode"],
+                'key'      => $_POST["key"],
+            ];
+            $update = $this->courierSetting->updateProduction('poslaju_setting', $data);
 
             if ($update) {
                 $_SESSION['upload_success'] = "Successful update data in Production Mode";
@@ -740,54 +563,43 @@ class SettingController
                 $_SESSION['upload_error'] = "Sorry! Failed to update data in Production Mode.";
             }
 
-            header("Location: {$domainURL}poslaju-setting");
+            header("Location: {$this->domainURL}poslaju-setting");
         }
     }
 
     public function changePassword()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
 
         $pageName = "Password";
 
-
         if (isset($_POST["changePass"])) {
             $userID = $_SESSION['user']->id;
-            $cpass = $_POST["cpass"];
-            $npass = $_POST["npass"];
+            $cpass  = $_POST["cpass"];
+            $npass  = $_POST["npass"];
             $cnpass = $_POST["cnpass"];
 
-            $cpassHash = hash("sha256", $cpass);
-            $npassHash = hash("sha256", $npass);
+            $cpassHash  = hash("sha256", $cpass);
+            $npassHash  = hash("sha256", $npass);
             $cnpassHash = hash("sha256", $cnpass);
 
-            $verify = $conn->query("SELECT * FROM member_hq WHERE id='$userID'");
-            $row = $verify->fetch_assoc();
+            $row = $this->memberHq->findById($userID);
 
             $errors = "";
 
             if ($cpassHash != $cpass) {
                 $errors .= "Invalid Current Password. ";
-            } else {
-                $errors .= "";
             }
 
             if ($npassHash != $cnpassHash) {
                 $errors .= "New Password and Confirm Password must be same. ";
-            } else {
-                $errors .= "";
             }
-
 
             if (!empty($errors)) {
                 $_SESSION['upload_error'] = "Sorry error updating password! " . $errors;
@@ -804,48 +616,31 @@ class SettingController
 
     public function savePassword()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
         $userID = $_SESSION['user']->id;
-        $cpass = $_POST["cpass"];
-        $npass = $_POST["npass"];
+        $cpass  = $_POST["cpass"];
+        $npass  = $_POST["npass"];
         $cnpass = $_POST["cnpass"];
 
-        $cpassHash = hash("sha256", $cpass);
-        $npassHash = hash("sha256", $npass);
+        $cpassHash  = hash("sha256", $cpass);
+        $npassHash  = hash("sha256", $npass);
         $cnpassHash = hash("sha256", $cnpass);
 
-        $verify = $conn->query("SELECT * FROM member_hq WHERE id='$userID'");
-        $row = $verify->fetch_assoc();
+        $row = $this->memberHq->findById($userID);
 
         $errors = "";
 
         if ($cpassHash != $row["password"]) {
             $errors .= "Invalid Current Password. ";
-        } else {
-            $errors .= "";
         }
 
         if ($npassHash != $cnpassHash) {
             $errors .= "New Password and Confirm Password must be same. ";
-        } else {
-            $errors .= "";
         }
-
 
         if (!empty($errors)) {
             $_SESSION['upload_error'] = "Sorry error updating password! " . $errors;
         } else {
-            $updatePassword = $conn->query("UPDATE member_hq SET `password`='$npassHash' WHERE id='$userID'");
+            $this->memberHq->updatePassword($userID, $npassHash);
             $_SESSION['upload_success'] = "Successful updating your password. You are advised to logout from system and login using new password.";
         }
 
@@ -855,67 +650,32 @@ class SettingController
 
     public function imageSetting()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $this->checkAccess();
 
-        $options = getSelectOptions();
-        $country = allSaleCountry();
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
 
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
         $pageName = "Setting Image";
-        $sql = "SELECT * FROM `image_setting` WHERE `use_type`='logo' AND `deleted_at` IS NULL ORDER BY `created_at` DESC";
-        $query = $conn->query($sql);
-        // Fetch all rows as an associative array
-        $rows = $query->fetch_all(MYSQLI_ASSOC);
+        $rows = $this->imageSetting->getLogos();
 
         require_once __DIR__ . '/../../view/Admin/image-setting.php';
     }
 
     public function setLogo()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify('logo-setting', $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
+        $this->checkAccess('logo-setting');
 
         if (isset($_GET["id"]) and !empty($_GET["id"])) {
             $id = $_GET["id"];
 
-            $disableAll = $conn->query("UPDATE image_setting SET sorting='0'");
+            $result = $this->imageSetting->setDefault($id);
 
-            if ($disableAll) {
-                $activateNew = $conn->query("UPDATE image_setting SET sorting='1' WHERE id='$id'");
+            if ($result) {
                 $_SESSION['upload_success'] = "Successful set default logo.";
             } else {
                 $_SESSION['upload_error'] = "Failed set default logo. Please try again.";
@@ -930,56 +690,39 @@ class SettingController
 
     public function uploadImages()
     {
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-
-        $options = getSelectOptions();
-        $country = allSaleCountry();
-
-
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-
-        if (roleVerify($firstSegments, $_SESSION['user']->id) == 0) {
-            header("Location: " . $domainURL . "access-denied");
-            //require_once __DIR__ . '/../../view/Admin/access-denied.php';
-            exit;
-        }
-
+        $this->checkAccess();
 
         if (isset($_POST['uploadLogo']) && isset($_FILES['file'])) {
-            $uploadDir = "assets/images/logo/"; // Folder path
+            $uploadDir = "assets/images/logo/";
 
-            // Create folder if not exists
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
 
             foreach ($_FILES['file']['tmp_name'] as $key => $tmpName) {
                 if (!empty($tmpName)) {
-                    $fileName = $currentYear . "_rozeyana_" . basename($_FILES['file']['name'][$key]);
+                    $fileName   = $this->currentYear . "_rozeyana_" . basename($_FILES['file']['name'][$key]);
                     $targetPath = $uploadDir . $fileName;
 
-                    // Move uploaded file
                     if (move_uploaded_file($tmpName, $targetPath)) {
+                        $sorting = '0';
+                        $message = "Successful upload new logo.";
 
-                        // If "Set as default" checked
                         if (!empty($_POST['defaultLogo'])) {
-                            $disableAll = $conn->query("UPDATE image_setting SET sorting='0'");
-                            $addImage = $conn->query("INSERT INTO `image_setting`(`id`, `use_type`, `image_path`, `use_link`, `sorting`, `created_at`, `updated_at`, `deleted_at`) VALUES (NULL,'logo','assets/images/logo/$fileName',NULL,'1','$dateNow','$dateNow',NULL)");
-                            $_SESSION['upload_success'] = "Successful upload new logo and set as default.";
-                        } else {
-                            $addImage = $conn->query("INSERT INTO `image_setting`(`id`, `use_type`, `image_path`, `use_link`, `sorting`, `created_at`, `updated_at`, `deleted_at`) VALUES (NULL,'logo','assets/images/logo/$fileName',NULL,'0','$dateNow','$dateNow',NULL)");
-                            $_SESSION['upload_success'] = "Successful upload new logo.";
+                            $this->imageSetting->disableAll();
+                            $sorting = '1';
+                            $message = "Successful upload new logo and set as default.";
                         }
-                    } else {
 
+                        $this->imageSetting->addImage([
+                            'use_type'   => 'logo',
+                            'image_path' => 'assets/images/logo/' . $fileName,
+                            'sorting'    => $sorting,
+                            'created_at' => $this->dateNow,
+                            'updated_at' => $this->dateNow,
+                        ]);
+                        $_SESSION['upload_success'] = $message;
+                    } else {
                         $_SESSION['upload_error'] = "Failed to upload new logo. Please try again.";
                     }
 

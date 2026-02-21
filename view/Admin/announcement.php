@@ -198,7 +198,7 @@ include "01-menu.php";
 
                                 <tbody>
                                     <?php
-                                    if ($listNews->num_rows < 1) {
+                                    if (empty($listNews)) {
                                     ?>
                                         <tr class="seperator">
                                             <td colspan="6"></td>
@@ -214,7 +214,7 @@ include "01-menu.php";
                                         </tr>
                                         <?php
                                     } else {
-                                        while ($row = $listNews->fetch_array()) {
+                                        foreach ($listNews as $row) {
                                             $session_id = $row["session_id"];
                                         ?>
                                             <tr class="seperator">

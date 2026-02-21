@@ -56,7 +56,7 @@ include "01-menu.php";
                             </thead>
                             <tbody>
                                 <?php
-                                while ($row = mysqli_fetch_array($result)) {
+                                foreach ($postageCosts as $row) {
                                     $dataCountry = getCountryP($row["country_id"]);
                                     ?>
                                     <tr>
@@ -125,8 +125,7 @@ include "01-menu.php";
                             </thead>
                             <tbody>
                                 <?php
-                                $codResult = $conn->query("SELECT * FROM `cod_charges` ORDER BY country_id ASC, shipping_zone ASC");
-                                while ($codRow = $codResult->fetch_array()) {
+                                foreach ($codCharges as $codRow) {
                                     $codCountry = getCountryP($codRow["country_id"]);
                                     $zoneName = '';
                                     if ($codCountry["name"] == "Malaysia" && $codRow["shipping_zone"] == "1") {
@@ -174,8 +173,7 @@ include "01-menu.php";
                 <select name="country_id" class="form-control" required style="margin-bottom:15px;" id="codCountrySelect">
                     <option value="" selected disabled>Select country</option>
                     <?php
-                    $resultsCod = $conn->query("SELECT * FROM `list_country` ORDER BY id ASC");
-                    while ($rc = $resultsCod->fetch_array()) {
+                    foreach ($countries as $rc) {
                     ?>
                         <option value="<?= $rc["id"] ?>" data-sign="<?= $rc["sign"] ?>"><?= $rc["name"] ?></option>
                     <?php
