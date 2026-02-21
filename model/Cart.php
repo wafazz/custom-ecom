@@ -86,4 +86,10 @@ class Cart extends BaseModel
         $sql = "UPDATE `cart` SET `status` = '1', `updated_at` = ? WHERE `id` = ?";
         return $this->execute($sql, "si", [$dateNow, $cartId]);
     }
+
+    public function updateStatusBySession($sessionId, $status, $dateNow)
+    {
+        $sql = "UPDATE `cart` SET `status` = ?, `updated_at` = ? WHERE `session_id` = ? AND `deleted_at` IS NULL";
+        return $this->execute($sql, "sss", [$status, $dateNow, $sessionId]);
+    }
 }

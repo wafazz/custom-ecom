@@ -460,7 +460,7 @@ include "01-menu.php";
 
   <!-- Order Cards -->
   <?php
-  if ($result->num_rows < 1) {
+  if (empty($orders)) {
   ?>
     <div class="order-card">
       <div class="no-data-card">
@@ -470,7 +470,7 @@ include "01-menu.php";
     </div>
   <?php
   } else {
-    while ($row = $result->fetch_array()) {
+    foreach ($orders as $row) {
       $session_id = $row["session_id"];
 
       // Status mapping

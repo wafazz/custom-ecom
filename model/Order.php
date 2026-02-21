@@ -111,4 +111,155 @@ class Order extends BaseModel
                 WHERE `id` = ?";
         return $this->execute($sql, "ssssi", [$courier, $awb, $trackingUrl, $dateNow, $orderId]);
     }
+
+    public function listByStatus($status, $havingCondition, $orderBy, $limit, $offset)
+    {
+        $sql = "
+            SELECT
+                co.id AS order_id, co.session_id, co.customer_name, co.created_at AS order_date,
+                co.awb_number, co.country, co.product_var_id, co.myr_value_include_postage,
+                co.payment_channel, co.status, co.payment_url, co.ship_channel,
+                co.courier_service, co.tracking_url,
+                ANY_VALUE(c.pv_id) AS pv_id, ANY_VALUE(c.quantity) AS quantity,
+                ANY_VALUE(p.name) AS product_name
+            FROM customer_orders AS co
+            JOIN cart AS c ON c.session_id = co.session_id AND c.deleted_at IS NULL
+            JOIN products AS p ON p.id = c.p_id AND p.deleted_at IS NULL
+            WHERE co.deleted_at IS NULL AND co.status = '{$status}'
+            GROUP BY co.id, co.session_id, co.customer_name, co.created_at, co.awb_number
+            {$havingCondition}
+            {$orderBy}
+            LIMIT {$limit} OFFSET {$offset}
+        ";
+        return $this->query($sql);
+    }
+
+    public function listByStatusWithAWB($status, $havingCondition, $orderBy, $limit, $offset)
+    {
+        $sql = "
+            SELECT
+                co.id AS order_id, co.session_id, co.customer_name, co.created_at AS order_date,
+                co.awb_number, co.country, co.product_var_id, co.myr_value_include_postage,
+                co.payment_channel, co.status, co.payment_url, co.ship_channel,
+                co.courier_service, co.tracking_url,
+                ANY_VALUE(c.pv_id) AS pv_id, ANY_VALUE(c.quantity) AS quantity,
+                ANY_VALUE(p.name) AS product_name,
+                ANY_VALUE(ap.id) AS awb_printed_id,
+                ANY_VALUE(ap.printed_by) AS printed_by,
+                ANY_VALUE(ap.created_at) AS awb_printed_date,
+                CASE
+                    WHEN ANY_VALUE(ap.id) IS NOT NULL THEN '<span class=\"btn btn-danger\">PRINTED AWB</span>'
+                    ELSE '<span class=\"btn btn-info\">UNPRINTED AWB</span>'
+                END AS printed_status
+            FROM customer_orders AS co
+            JOIN cart AS c ON c.session_id = co.session_id AND c.deleted_at IS NULL
+            JOIN products AS p ON p.id = c.p_id AND p.deleted_at IS NULL
+            LEFT JOIN awb_printed AS ap
+                ON ap.deleted_at IS NULL
+                AND ap.order_id LIKE CONCAT('%[', co.id, ']%')
+            WHERE co.deleted_at IS NULL AND co.status = '{$status}'
+            GROUP BY co.id, co.session_id, co.customer_name, co.created_at, co.awb_number
+            {$havingCondition}
+            {$orderBy}
+            LIMIT {$limit} OFFSET {$offset}
+        ";
+        return $this->query($sql);
+    }
+
+    public function countByStatusFiltered($status, $havingCondition = '')
+    {
+        $sql = "
+            SELECT COUNT(*) AS total
+            FROM (
+                SELECT co.id
+                FROM customer_orders AS co
+                JOIN cart AS c ON c.session_id = co.session_id AND c.deleted_at IS NULL
+                JOIN products AS p ON p.id = c.p_id AND p.deleted_at IS NULL
+                WHERE co.deleted_at IS NULL AND co.status = '{$status}'
+                GROUP BY co.id
+                {$havingCondition}
+            ) AS filtered_orders
+        ";
+        $rows = $this->query($sql);
+        return (int)($rows[0]['total'] ?? 0);
+    }
+
+    public function getOrderDetails($id)
+    {
+        $sql = "
+            SELECT `id`, `session_id`, `order_to`, `product_var_id`, `total_qty`, `total_price`, `postage_cost`,
+                `currency_sign`, `country_id`, `country`, `state`, `city`, `postcode`, `address_2`, `address_1`,
+                `customer_name`, `customer_name_last`, `customer_phone`, `customer_email`, `status`, `payment_channel`, `payment_code`,
+                `payment_url`, `ship_channel`, `courier_service`, `awb_number`, `tracking_url`, `created_at`, `updated_at`,
+                `deleted_at`, `remark_comment`, `tracking_milestone`, `to_myr_rate`, `myr_value_include_postage`,
+                `myr_value_without_postage`
+            FROM `customer_orders`
+            WHERE `id` = ? AND `deleted_at` IS NULL
+        ";
+        $rows = $this->query($sql, "i", [$id]);
+        return $rows[0] ?? null;
+    }
+
+    public function submitToCourier($orderId, $status, $courier, $awb, $trackingUrl, $dateNow)
+    {
+        $sql = "UPDATE `customer_orders` SET `status` = ?, `courier_service` = ?, `awb_number` = ?, `tracking_url` = ?, `updated_at` = ? WHERE `id` = ?";
+        return $this->execute($sql, "issssi", [$status, $courier, $awb, $trackingUrl, $dateNow, $orderId]);
+    }
+
+    public function bulkMoveStatus($orderIds, $status, $dateNow)
+    {
+        if (empty($orderIds)) return false;
+        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+        $types = 'is' . str_repeat('i', count($orderIds));
+        $params = array_merge([$status, $dateNow], $orderIds);
+        $sql = "UPDATE `customer_orders` SET `status` = ?, `updated_at` = ? WHERE `id` IN ({$placeholders})";
+        return $this->execute($sql, $types, $params);
+    }
+
+    public function updateCustomerDetails($orderId, $data, $dateNow)
+    {
+        $sql = "UPDATE `customer_orders` SET
+            `state` = ?, `city` = ?, `postcode` = ?, `address_2` = ?, `address_1` = ?,
+            `customer_name` = ?, `customer_name_last` = ?, `customer_phone` = ?, `customer_email` = ?,
+            `updated_at` = ?
+            WHERE `id` = ?";
+        return $this->execute($sql, "ssssssssssi", [
+            $data['state'], $data['city'], $data['postcode'], $data['address2'], $data['address1'],
+            $data['name'], $data['name_last'], $data['phone'], $data['email'],
+            $dateNow, $orderId
+        ]);
+    }
+
+    public function searchOrdersList($whereCondition, $limit, $offset)
+    {
+        $sql = "
+            SELECT
+                co.id AS order_id, co.session_id, co.customer_name, co.customer_phone,
+                co.customer_email, co.created_at AS order_date, co.awb_number, co.country,
+                co.product_var_id, co.myr_value_include_postage, co.payment_channel,
+                co.status, co.ship_channel, co.courier_service, co.tracking_url,
+                ANY_VALUE(c.pv_id) AS pv_id, ANY_VALUE(c.quantity) AS quantity,
+                ANY_VALUE(p.name) AS product_name
+            FROM customer_orders AS co
+            JOIN cart AS c ON c.session_id = co.session_id AND c.deleted_at IS NULL
+            JOIN products AS p ON p.id = c.p_id AND p.deleted_at IS NULL
+            {$whereCondition}
+            GROUP BY co.id, co.session_id, co.customer_name, co.customer_phone, co.customer_email, co.created_at, co.awb_number, co.country,
+                     co.product_var_id, co.myr_value_include_postage, co.payment_channel, co.status, co.ship_channel, co.courier_service, co.tracking_url
+            ORDER BY co.created_at DESC
+            LIMIT {$limit} OFFSET {$offset}
+        ";
+        return $this->query($sql);
+    }
+
+    public function countSearchResults($whereCondition)
+    {
+        $sql = "
+            SELECT COUNT(DISTINCT co.id) AS total
+            FROM customer_orders AS co
+            {$whereCondition}
+        ";
+        $rows = $this->query($sql);
+        return (int)($rows[0]['total'] ?? 0);
+    }
 }

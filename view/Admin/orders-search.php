@@ -112,7 +112,7 @@ include "01-menu.php";
                                 </thead>
                                 <tbody>
                                     <?php
-                                    if ($result->num_rows < 1) {
+                                    if (empty($orders)) {
                                     ?>
                                         <tr class="seperator">
                                             <td colspan="6"></td>
@@ -128,7 +128,7 @@ include "01-menu.php";
                                         </tr>
                                         <?php
                                     } else {
-                                        while ($row = $result->fetch_array()) {
+                                        foreach ($orders as $row) {
                                             $session_id = $row["session_id"];
                                         ?>
                                             <tr class="seperator">
