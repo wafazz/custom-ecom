@@ -203,13 +203,22 @@
 
 
 
-<!-- PWA Install Banner -->
+<!-- PWA Install Banner (Android/Chrome) -->
 <div id="pwa-install-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#111; color:#fff; padding:12px 20px; z-index:9999; align-items:center; justify-content:space-between; font-family:'Montserrat',sans-serif; font-size:14px;">
     <span>Install Shaniena Empire app for a better experience</span>
     <div>
         <button id="pwa-install-btn" style="background:#e53637; color:#fff; border:none; padding:8px 20px; border-radius:4px; font-size:13px; font-weight:600; cursor:pointer; margin-right:8px;">Install App</button>
         <button id="pwa-dismiss-btn" style="background:none; color:#999; border:none; font-size:13px; cursor:pointer;">Not now</button>
     </div>
+</div>
+
+<!-- PWA Install Banner (iOS Safari) -->
+<div id="pwa-ios-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#111; color:#fff; padding:16px 20px; z-index:9999; font-family:'Montserrat',sans-serif; font-size:14px; text-align:center;">
+    <div style="margin-bottom:8px; font-weight:600;">Install Shaniena Empire App</div>
+    <div style="font-size:13px; color:#ccc; line-height:1.6;">
+        Tap <svg style="vertical-align:middle; margin:0 2px;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A90D9" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> then <strong>"Add to Home Screen"</strong>
+    </div>
+    <button id="pwa-ios-dismiss" style="background:none; color:#999; border:none; font-size:13px; cursor:pointer; margin-top:10px;">Got it</button>
 </div>
 
 <script>
@@ -222,38 +231,56 @@ if ('serviceWorker' in navigator) {
 
 // PWA Install Prompt
 (function() {
-    var deferredPrompt = null;
-    var banner = document.getElementById('pwa-install-banner');
-    var installBtn = document.getElementById('pwa-install-btn');
-    var dismissBtn = document.getElementById('pwa-dismiss-btn');
-
     var dismissed = localStorage.getItem('pwa-dismiss-time');
     if (dismissed && (Date.now() - parseInt(dismissed)) < 7 * 24 * 60 * 60 * 1000) return;
 
-    window.addEventListener('beforeinstallprompt', function(e) {
-        e.preventDefault();
-        deferredPrompt = e;
-        banner.style.display = 'flex';
-    });
+    // Already installed as PWA (standalone mode)
+    if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) return;
 
-    installBtn.addEventListener('click', function() {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(function() {
-            deferredPrompt = null;
-            banner.style.display = 'none';
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    var isSafari = /Safari/.test(navigator.userAgent) && !/Chrome|CriOS|FxiOS/.test(navigator.userAgent);
+
+    if (isIOS && isSafari) {
+        // iOS Safari — show manual instructions
+        var iosBanner = document.getElementById('pwa-ios-banner');
+        iosBanner.style.display = 'block';
+
+        document.getElementById('pwa-ios-dismiss').addEventListener('click', function() {
+            iosBanner.style.display = 'none';
+            localStorage.setItem('pwa-dismiss-time', Date.now().toString());
         });
-    });
+    } else {
+        // Android/Chrome — use beforeinstallprompt
+        var deferredPrompt = null;
+        var banner = document.getElementById('pwa-install-banner');
+        var installBtn = document.getElementById('pwa-install-btn');
+        var dismissBtn = document.getElementById('pwa-dismiss-btn');
 
-    dismissBtn.addEventListener('click', function() {
-        banner.style.display = 'none';
-        localStorage.setItem('pwa-dismiss-time', Date.now().toString());
-    });
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            banner.style.display = 'flex';
+        });
 
-    window.addEventListener('appinstalled', function() {
-        banner.style.display = 'none';
-        deferredPrompt = null;
-    });
+        installBtn.addEventListener('click', function() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function() {
+                deferredPrompt = null;
+                banner.style.display = 'none';
+            });
+        });
+
+        dismissBtn.addEventListener('click', function() {
+            banner.style.display = 'none';
+            localStorage.setItem('pwa-dismiss-time', Date.now().toString());
+        });
+
+        window.addEventListener('appinstalled', function() {
+            banner.style.display = 'none';
+            deferredPrompt = null;
+        });
+    }
 })();
 </script>
 
