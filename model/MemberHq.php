@@ -58,4 +58,16 @@ class MemberHq extends BaseModel
         return $this->execute($sql, "ssssi", [$data['f_name'], $data['l_name'], $data['phone'], $dateNow, $id]);
     }
 
+    public function authenticate($email, $hashPass)
+    {
+        $sql = "SELECT * FROM `member_hq` WHERE `email` = ? AND `password` = ?";
+        $rows = $this->query($sql, "ss", [$email, $hashPass]);
+        return $rows[0] ?? null;
+    }
+
+    public function updateProfileApi($id, $fName, $lName, $phone)
+    {
+        $sql = "UPDATE `member_hq` SET `f_name` = ?, `l_name` = ?, `phone` = ? WHERE `id` = ?";
+        return $this->execute($sql, "sssi", [$fName, $lName, $phone, $id]);
+    }
 }

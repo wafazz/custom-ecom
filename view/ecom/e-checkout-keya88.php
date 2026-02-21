@@ -69,7 +69,7 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                 $subTotal = "0.00";
                                 $subTotals = 0;
                                 $x = 1;
-                                while ($row = $query->fetch_array()) {
+                                foreach ($query as $row) {
                                     $cartid = $row["id"];
                                     $pid = $row["p_id"];
                                     $dataProduct = GetProductDetails($pid);

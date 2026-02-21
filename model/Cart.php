@@ -92,4 +92,46 @@ class Cart extends BaseModel
         $sql = "UPDATE `cart` SET `status` = ?, `updated_at` = ? WHERE `session_id` = ? AND `deleted_at` IS NULL";
         return $this->execute($sql, "sss", [$status, $dateNow, $sessionId]);
     }
+
+    public function getTotalWeight($sessionId)
+    {
+        $sql = "SELECT SUM(`quantity` * `weight`) AS tWeight FROM `cart` WHERE `session_id` = ? AND `deleted_at` IS NULL AND `status` IN(0,1)";
+        $rows = $this->query($sql, "s", [$sessionId]);
+        return (float) ($rows[0]['tWeight'] ?? 0);
+    }
+
+    public function softDeleteById($cartId, $dateNow)
+    {
+        $sql = "UPDATE `cart` SET `deleted_at` = ?, `status` = '4' WHERE `id` = ?";
+        return $this->execute($sql, "si", [$dateNow, $cartId]);
+    }
+
+    public function getById($cartId)
+    {
+        $sql = "SELECT * FROM `cart` WHERE `id` = ?";
+        $rows = $this->query($sql, "i", [$cartId]);
+        return $rows[0] ?? null;
+    }
+
+    public function updateById($cartId, $data)
+    {
+        $sets = [];
+        $types = '';
+        $params = [];
+        foreach ($data as $col => $val) {
+            $sets[] = "`{$col}` = ?";
+            $types .= 's';
+            $params[] = $val;
+        }
+        $types .= 'i';
+        $params[] = $cartId;
+        $sql = "UPDATE `cart` SET " . implode(', ', $sets) . " WHERE `id` = ?";
+        return $this->execute($sql, $types, $params);
+    }
+
+    public function restoreAndMarkPaid($cartId, $dateNow)
+    {
+        $sql = "UPDATE `cart` SET `updated_at` = ?, `deleted_at` = NULL, `status` = '1' WHERE `id` = ?";
+        return $this->execute($sql, "si", [$dateNow, $cartId]);
+    }
 }

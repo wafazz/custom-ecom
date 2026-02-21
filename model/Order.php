@@ -283,4 +283,46 @@ class Order extends BaseModel
         $sql = "SELECT * FROM `customer_orders` WHERE `status` IN(1,2,3,4,5,6) AND `deleted_at` IS NULL ORDER BY `id` DESC LIMIT ?";
         return $this->query($sql, "i", [$limit]);
     }
+
+    public function totalSalesByDate($date)
+    {
+        $sql = "SELECT SUM(`myr_value_include_postage`) AS total FROM `customer_orders` WHERE `status` IN(1,2,3,4) AND `created_at` LIKE ? AND `deleted_at` IS NULL";
+        $rows = $this->query($sql, "s", ["%{$date}%"]);
+        return (float) ($rows[0]['total'] ?? 0);
+    }
+
+    public function countAll()
+    {
+        $sql = "SELECT COUNT(*) AS cnt FROM `customer_orders` WHERE `deleted_at` IS NULL";
+        $rows = $this->query($sql);
+        return (int) ($rows[0]['cnt'] ?? 0);
+    }
+
+    public function countByStatusValue($status)
+    {
+        $sql = "SELECT COUNT(*) AS cnt FROM `customer_orders` WHERE `status` = ?";
+        $rows = $this->query($sql, "i", [$status]);
+        return (int) ($rows[0]['cnt'] ?? 0);
+    }
+
+    public function getNewOrdersWithProducts($searchSql, $limit, $offset)
+    {
+        $sql = "SELECT co.id AS order_id, co.customer_name, co.total_qty, co.postage_cost,
+                    co.currency_sign, co.country, co.status, co.customer_phone, co.created_at,
+                    co.myr_value_without_postage, c.quantity, p.name AS product_name
+                FROM `customer_orders` co
+                LEFT JOIN `cart` c ON c.session_id = co.session_id
+                LEFT JOIN `products` p ON p.id = c.p_id
+                WHERE co.status = 1 AND co.deleted_at IS NULL AND c.deleted_at IS NULL AND c.status IN(0,1) {$searchSql}
+                ORDER BY co.created_at DESC
+                LIMIT ? OFFSET ?";
+        return $this->query($sql, "ii", [$limit, $offset]);
+    }
+
+    public function countNewOrders($searchSql)
+    {
+        $sql = "SELECT COUNT(*) AS total FROM `customer_orders` WHERE `status` = 1 AND `deleted_at` IS NULL {$searchSql}";
+        $rows = $this->query($sql);
+        return (int) ($rows[0]['total'] ?? 0);
+    }
 }

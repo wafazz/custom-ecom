@@ -214,7 +214,7 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                         $subTotals = 0;
                                         $x = 1;
 
-                                        while ($row = $query->fetch_array()) {
+                                        foreach ($query as $row) {
                                             $cartid = $row["id"];
                                             $pid = $row["p_id"];
                                             $pvid = $row["pv_id"];

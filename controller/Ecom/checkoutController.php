@@ -5,6 +5,15 @@ namespace Ecom;
 require_once __DIR__ . '/../../config/mainConfig.php';
 require_once __DIR__ . '/../../email-order.php';
 require_once __DIR__ . '/../../model/Bayarcash.php';
+require_once __DIR__ . '/../../model/Cart.php';
+require_once __DIR__ . '/../../model/Order.php';
+require_once __DIR__ . '/../../model/OrderDetail.php';
+require_once __DIR__ . '/../../model/CartLock.php';
+require_once __DIR__ . '/../../model/SenangPaySetting.php';
+require_once __DIR__ . '/../../model/StripeSetting.php';
+require_once __DIR__ . '/../../model/StateSetting.php';
+require_once __DIR__ . '/../../model/PostageCost.php';
+require_once __DIR__ . '/../../model/BayarcashTransaction.php';
 
 require __DIR__ . '/../../vendor/autoload.php';
 
@@ -13,6 +22,31 @@ use PHPMailer\PHPMailer\Exception;
 
 class CheckoutController
 {
+    private $conn;
+    private $cartModel;
+    private $orderModel;
+    private $orderDetailModel;
+    private $cartLockModel;
+    private $senangPayModel;
+    private $stripeModel;
+    private $stateModel;
+    private $postageCostModel;
+    private $bayarcashTxModel;
+
+    public function __construct()
+    {
+        $this->conn = getDbConnection();
+        $this->cartModel = new \Cart($this->conn);
+        $this->orderModel = new \Order($this->conn);
+        $this->orderDetailModel = new \OrderDetail($this->conn);
+        $this->cartLockModel = new \CartLock($this->conn);
+        $this->senangPayModel = new \SenangPaySetting($this->conn);
+        $this->stripeModel = new \StripeSetting($this->conn);
+        $this->stateModel = new \StateSetting($this->conn);
+        $this->postageCostModel = new \PostageCost($this->conn);
+        $this->bayarcashTxModel = new \BayarcashTransaction($this->conn);
+    }
+
     public function index()
     {
         if (isset($_COOKIE['country'])) {
@@ -23,7 +57,7 @@ class CheckoutController
         }
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Checkout";
@@ -43,22 +77,18 @@ class CheckoutController
         $categories2 = getListCategoryBrand2(2);
         $categories3 = getListCategoryBrand2(2);
 
-        $stripe = "SELECT * FROM `stripe_setting` WHERE id='1'";
-
-        $stripes = $conn->query($stripe);
-
-        $stripesRow = $stripes->fetch_array();
+        $stripesRow = $this->stripeModel->getSettings();
 
         $newArrival = newProduct(8);
 
         $sessionid = $_SESSION["session_id"];
 
-        $sql = "SELECT * FROM `cart` WHERE `session_id`='$sessionid'AND `deleted_at` IS NULL AND `status` IN(0,1)";
-        $query = $conn->query($sql);
+        $cartItems = $this->cartModel->getActiveBySession($sessionid);
+        $query = $cartItems;
 
         $myState = stateMalaysia();
 
-        if ($query->num_rows < "1") {
+        if (empty($cartItems)) {
             header("Location: /");
             exit;
         }
@@ -76,7 +106,7 @@ class CheckoutController
 
         require_once __DIR__ . '/../../view/ecom/e-checkout-keya88.php';
     }
-    
+
     public function index2()
     {
         if (isset($_COOKIE['country'])) {
@@ -87,7 +117,7 @@ class CheckoutController
         }
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Checkout";
@@ -107,22 +137,18 @@ class CheckoutController
         $categories2 = getListCategoryBrand2(2);
         $categories3 = getListCategoryBrand2(2);
 
-        $stripe = "SELECT * FROM `stripe_setting` WHERE id='1'";
-
-        $stripes = $conn->query($stripe);
-
-        $stripesRow = $stripes->fetch_array();
+        $stripesRow = $this->stripeModel->getSettings();
 
         $newArrival = newProduct(8);
 
         $sessionid = $_SESSION["session_id"];
 
-        $sql = "SELECT * FROM `cart` WHERE `session_id`='$sessionid'AND `deleted_at` IS NULL AND `status` IN(0,1)";
-        $query = $conn->query($sql);
+        $cartItems = $this->cartModel->getActiveBySession($sessionid);
+        $query = $cartItems;
 
         $myState = stateMalaysia();
 
-        if ($query->num_rows < "1") {
+        if (empty($cartItems)) {
             header("Location: /");
             exit;
         }
@@ -151,7 +177,7 @@ class CheckoutController
         }
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $currentYear = currentYear();
         $dateNow = dateNow();
         $pageName = "Checkout";
@@ -163,22 +189,18 @@ class CheckoutController
         $categories2 = getListCategoryBrand2(2);
         $categories3 = getListCategoryBrand2(2);
 
-        $stripe = "SELECT * FROM `stripe_setting` WHERE id='1'";
-
-        $stripes = $conn->query($stripe);
-
-        $stripesRow = $stripes->fetch_array();
+        $stripesRow = $this->stripeModel->getSettings();
 
         $newArrival = newProduct(8);
 
         $sessionid = $_SESSION["session_id"];
 
-        $sql = "SELECT * FROM `cart` WHERE `session_id`='$sessionid'AND `deleted_at` IS NULL AND `status` IN(0,1)";
-        $query = $conn->query($sql);
+        $cartItems = $this->cartModel->getActiveBySession($sessionid);
+        $query = $cartItems;
 
         $myState = stateMalaysia();
 
-        if ($query->num_rows < "1") {
+        if (empty($cartItems)) {
             header("Location: /");
             exit;
         }
@@ -196,23 +218,14 @@ class CheckoutController
 
         $states = $_SESSION["state"];
 
-        $sqls = "SELECT * FROM `state` WHERE country_id='$country' AND `name`='$states'";
-        $querys = $conn->query($sqls);
-        $rowState = $querys->fetch_array();
+        $rowState = $this->stateModel->findByCountryAndName($country, $states);
 
         $shippingZone = $rowState["shipping_zone"];
 
-        $sqlpc = "SELECT * FROM `postage_cost` WHERE country_id='$country' AND shipping_zone='$shippingZone'";
-        $querypc = $conn->query($sqlpc);
-        $rowpc = $querypc->fetch_array();
+        $rowpc = $this->postageCostModel->findByCountryZone($country, $shippingZone);
 
-        $sqlw = "SELECT SUM(`quantity` * `weight`) AS tWeight FROM `cart` WHERE `session_id`='$sessionid'AND `deleted_at` IS NULL AND `status` IN(0,1)";
-        $queryw = $conn->query($sqlw);
-        $roww = $queryw->fetch_assoc();
-
-        $totalWeightKG = $roww["tWeight"] / 1000;
-
-
+        $totalWeightGram = $this->cartModel->getTotalWeight($sessionid);
+        $totalWeightKG = $totalWeightGram / 1000;
 
         $postage = calculatePostage($totalWeightKG, $rowpc["first_kilo"], $rowpc["next_kilo"]);
 
@@ -221,7 +234,6 @@ class CheckoutController
 
     public function checkoutUpdate()
     {
-        $conn = getDbConnection();
         $sessionid = $_SESSION["session_id"];
         $dateNow = dateNow();
 
@@ -239,29 +251,163 @@ class CheckoutController
                 if ($dataProduct["max_purchase"] < $quantities[$x]) {
                     $errorUpdate .= "The maximum purchase quantity for product " . $dataProduct["name"] . " is " . $dataProduct["max_purchase"] . ". You requested " . $quantities[$x] . ".<br>";
                 } else if ($quantities[$x] < 1) {
-                    $conn->query("UPDATE `cart` SET `deleted_at`= NOW(), `status`='4' WHERE `id`='" . $cartIds[$x] . "'");
+                    $this->cartModel->softDeleteById($cartIds[$x], $dateNow);
                 } else {
-                    $dataCart = $conn->query("SELECT * FROM `cart` WHERE `id`='" . $cartIds[$x] . "'");
-                    $roeCart = $dataCart->fetch_array();
+                    $roeCart = $this->cartModel->getById($cartIds[$x]);
                     $tweight = $quantities[$x] * $dataProduct["weight"];
-                    $conn->query("UPDATE `cart` SET `quantity`='" . $quantities[$x] . "', `total_weight`='" . $tweight . "' WHERE `id`='" . $cartIds[$x] . "'");
+                    $this->cartModel->updateById($cartIds[$x], [
+                        'quantity' => $quantities[$x],
+                        'total_weight' => $tweight
+                    ]);
                 }
-
-
 
                 $x++;
             }
 
-            $addCartAll = "UPDATE `cart` SET `updated_at`='$dateNow' WHERE `session_id`='$sessionid' AND `deleted_at` IS NULL AND `status` IN(0,1)";
-            $conn->query($addCartAll);
+            $this->cartModel->touchSession($sessionid, $dateNow);
 
             if (!empty($errorUpdate)) {
                 $_SESSION["error_update"] = "Error note:<br>" . $errorUpdate;
             }
         }
 
-        // Redirect back to the checkout page
         header("Location: /checkout");
+    }
+
+    private function buildOrderData($sessionId, $data, $country, $productVarId, $qty, $tPrice, $paymentChannel, $status, $subTotal)
+    {
+        $dateNow = dateNow();
+        return [
+            'session_id'             => $sessionId,
+            'order_to'               => '1',
+            'product_var_id'         => $productVarId,
+            'total_qty'              => $qty,
+            'total_price'            => $tPrice,
+            'postage_cost'           => $_SESSION["postageCharge"],
+            'currency_sign'          => $data["sign"],
+            'country_id'             => $country,
+            'country'                => $data["name"],
+            'state'                  => $_SESSION["state"],
+            'city'                   => $_SESSION["city"],
+            'postcode'               => $_SESSION["postcode"],
+            'address_2'              => $_SESSION["add_2"],
+            'address_1'              => $_SESSION["add_1"],
+            'customer_name'          => $_SESSION["fname"],
+            'customer_name_last'     => $_SESSION["lname"],
+            'customer_phone'         => $_SESSION["ophone"],
+            'customer_email'         => $_SESSION["oemail"],
+            'status'                 => $status,
+            'payment_channel'        => $paymentChannel,
+            'payment_code'           => $paymentChannel === 'COD' ? 'COD' : 'nill',
+            'payment_url'            => $paymentChannel === 'COD' ? 'COD' : 'nill',
+            'ship_channel'           => $paymentChannel === 'COD' ? 'COD' : 'Doorstep Delivery',
+            'courier_service'        => '',
+            'awb_number'             => '',
+            'tracking_url'           => '',
+            'created_at'             => $dateNow,
+            'updated_at'             => $dateNow,
+            'remark_comment'         => $_SESSION["remark"],
+            'tracking_milestone'     => '',
+            'to_myr_rate'            => '1',
+            'myr_value_include_postage' => $subTotal,
+            'myr_value_without_postage' => $tPrice,
+            'printed_awb'            => '0',
+        ];
+    }
+
+    private function lockCartItems($sessionId, $cartItems, $dateNow)
+    {
+        $this->cartLockModel->softDeleteBySession($sessionId, $dateNow);
+
+        $x = 1;
+        $product_var_id = "";
+        $qty = 0;
+        $tPrice = 0;
+        foreach ($cartItems as $cartItem) {
+            $dataProduct = GetProductDetails($cartItem["p_id"]);
+            if ($x == 1) {
+                $product_var_id .= "[" . $cartItem["pv_id"] . "]";
+            } else {
+                $product_var_id .= ",[" . $cartItem["pv_id"] . "]";
+            }
+            $qty += $cartItem["quantity"];
+            $tPrice += $cartItem["price"] * $cartItem["quantity"];
+
+            $existingLock = $this->cartLockModel->findByCartAndSession($cartItem["id"], $sessionId);
+            if ($existingLock) {
+                $this->cartLockModel->updateLock($existingLock["id"], [
+                    'quantity'     => $cartItem["quantity"],
+                    'price'        => $cartItem["price"],
+                    'weight'       => $cartItem["weight"],
+                    'total_weight' => $cartItem["total_weight"],
+                    'updated_at'   => $dateNow,
+                    'locked_date'  => $dateNow,
+                ]);
+            } else {
+                $this->cartLockModel->createLock([
+                    'cart_id'       => $cartItem["id"],
+                    'session_id'    => $sessionId,
+                    'p_id'          => $cartItem["p_id"],
+                    'pv_id'         => $cartItem["pv_id"],
+                    'quantity'      => $cartItem["quantity"],
+                    'price'         => $cartItem["price"],
+                    'weight'        => $cartItem["weight"],
+                    'total_weight'  => $cartItem["total_weight"],
+                    'currency_sign' => $cartItem["currency_sign"],
+                    'country_id'    => $cartItem["country_id"],
+                    'created_at'    => $dateNow,
+                    'updated_at'    => $dateNow,
+                    'locked_date'   => $dateNow,
+                    'status'        => '0',
+                ]);
+            }
+            $x++;
+        }
+
+        return ['product_var_id' => $product_var_id, 'qty' => $qty, 'tPrice' => $tPrice];
+    }
+
+    private function completeOrderAfterPayment($orderId, $customerName, $customerEmail, $dateNow, $domainURL)
+    {
+        $lockedItems = $this->cartLockModel->getActiveBySession(getOrder(1, $orderId)["session_id"]);
+        foreach ($lockedItems as $cartLockItem) {
+            $this->cartModel->restoreAndMarkPaid($cartLockItem["cart_id"], $dateNow);
+        }
+
+        $hashOrder = hash("sha256", $orderId . "_" . $customerName . "_" . $dateNow);
+        $this->orderDetailModel->createDetail($orderId, $hashOrder, $dateNow);
+
+        $emailData = [
+            'CustomerName' => $customerName,
+            'OrderID'      => $orderId,
+            'OrderLink'    => $domainURL . "order-details/" . $hashOrder,
+        ];
+
+        $emailHTML = getEmailTemplate($emailData);
+
+        $mail = new PHPMailer(true);
+        try {
+            $mail->isSMTP();
+            $mail->Host       = 'smtp-relay.brevo.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = '889d41001@smtp-brevo.com';
+            $mail->Password   = 'xsmtpsib-XXXXXXXXXXXXXXXXXXXX';
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = 587;
+
+            $mail->setFrom('orders-noreply@rozeyana.com', 'Rozeyana.com');
+            $mail->addAddress($customerEmail, $customerName);
+            $mail->isHTML(true);
+            $mail->Subject = 'Your Order Confirmation - Rozeyana';
+            $mail->Body    = $emailHTML;
+            $mail->AltBody = 'Thank you for your order #' . $orderId . '. View: ' . $domainURL . 'order-details/' . $hashOrder;
+
+            $mail->send();
+        } catch (Exception $e) {
+            error_log("Mail error: {$mail->ErrorInfo}");
+        }
+
+        return $hashOrder;
     }
 
     public function proceedPaymentSenangPay()
@@ -273,11 +419,7 @@ class CheckoutController
             exit;
         }
         $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = getDbConnection();
-
         $data = dataCountry($country);
-
         $dateNow = dateNow();
 
         if (!isset($_SESSION["session_id"]) || empty($_SESSION["session_id"])) {
@@ -285,26 +427,14 @@ class CheckoutController
             exit();
         }
 
-        //echo $_SESSION["session_id"] . "<br><br>";
+        $credentials = $this->senangPayModel->getCredentials();
+        $merchant_id = $credentials['merchant_id'];
+        $secret_key  = $credentials['secret_key'];
+        $urlsubmit   = $credentials['url'];
 
-        $getSenangPay = $conn->query("SELECT * FROM `senangpay_api` ORDER BY id DESC LIMIT 1");
-        $dataSenangPay = $getSenangPay->fetch_array();
+        $cartItems = $this->cartModel->getActiveBySession($_SESSION["session_id"]);
 
-        if ($dataSenangPay["type"] == 'sandbox') {
-            $merchant_id = $dataSenangPay["merchant_id"];
-            $secret_key  = $dataSenangPay["secret_key"];
-            $urlsubmit = $dataSenangPay["sandbox_url"];
-            //echo "sandbox<br><br>";
-        } else {
-            $merchant_id = $dataSenangPay["pro_merchant_id"];
-            $secret_key  = $dataSenangPay["pro_secret_key"];
-            $urlsubmit = $dataSenangPay["production_url"];
-            //echo "Production<br><br>";
-        }
-
-        $getCart = $conn->query("SELECT * FROM `cart` WHERE `session_id`='" . $_SESSION["session_id"] . "' AND `deleted_at` IS NULL AND `status` IN(0,1)");
-
-        if ($getCart->num_rows < 1) {
+        if (empty($cartItems)) {
             header("Location: " . $domainURL . "checkout");
             exit();
         }
@@ -313,120 +443,19 @@ class CheckoutController
             header("Location: " . $domainURL . "checkout");
             exit();
         }
-        //$getCart = $conn->query("SELECT * FROM `cart` WHERE `session_id`='" . $_SESSION["session_id"] . "'");
 
+        $lockResult = $this->lockCartItems($_SESSION["session_id"], $cartItems, $dateNow);
+        $product_var_id = $lockResult['product_var_id'];
+        $qty = $lockResult['qty'];
+        $tPrice = $lockResult['tPrice'];
 
-        $softDeleteLock = $conn->query("UPDATE `cart_lock_senangpay` SET `deleted_at`= '$dateNow' WHERE `session_id`='" . $_SESSION["session_id"] . "'");
+        $orderData = $this->buildOrderData($_SESSION["session_id"], $data, $country, $product_var_id, $qty, $tPrice, 'nill', '0', $_SESSION["subTotal"]);
+        $pendingOrderId = $this->orderModel->createOrder($orderData);
 
-        $x = 1;
-        $product_var_id = "";
-        $qty = 0;
-        $tPrice = 0;
-        foreach ($getCart as $cartItem) {
-            $dataProduct = GetProductDetails($cartItem["p_id"]);
-            //echo "Cart Item: " . $dataProduct["name"] . " | Quantity: " . $cartItem["quantity"] . "<br>";
-            if ($x == 1) {
-                $product_var_id .= "[" . $cartItem["pv_id"] . "]";
-            } else {
-                $product_var_id .= ",[" . $cartItem["pv_id"] . "]";
-            }
-            $qty += $cartItem["quantity"];
-            $tPrice += $cartItem["price"] * $cartItem["quantity"];
-
-
-
-            $getCartLock = $conn->query("SELECT * FROM `cart_lock_senangpay` WHERE `cart_id`='" . $cartItem["id"] . "' AND `session_id`='" . $_SESSION["session_id"] . "'");
-            if ($getCartLock->num_rows > 0) {
-                $dataLock = $getCartLock->fetch_array();
-                $conn->query("UPDATE `cart_lock_senangpay` SET `quantity`='" . $cartItem["quantity"] . "', `price`='" . $cartItem["price"] . "', `weight`='" . $cartItem["weight"] . "', `total_weight`='" . $cartItem["total_weight"] . "', `updated_at`='$dateNow', `locked_date`= '$dateNow', `deleted_at`= NULL WHERE `id`='" . $dataLock["id"] . "'");
-            } else {
-                $conn->query("INSERT INTO `cart_lock_senangpay`(`id`, `cart_id`, `session_id`, `p_id`, `pv_id`, `quantity`, `price`, `weight`, `total_weight`, `currency_sign`, `country_id`, `created_at`, `updated_at`, `locked_date`, `deleted_at`, `status`) VALUES (NULL,'" . $cartItem["id"] . "','" . $_SESSION["session_id"] . "','" . $cartItem["p_id"] . "','" . $cartItem["pv_id"] . "','" . $cartItem["quantity"] . "','" . $cartItem["price"] . "','" . $cartItem["weight"] . "','" . $cartItem["total_weight"] . "','" . $cartItem["currency_sign"] . "','" . $cartItem["country_id"] . "','$dateNow','$dateNow', '$dateNow', NULL, '0')");
-            }
-            $x++;
-        }
-
-        $pendingOrder = $conn->query("INSERT INTO customer_orders (
-                `id`, 
-                `session_id`, 
-                `order_to`, 
-                `product_var_id`, 
-                `total_qty`, 
-                `total_price`, 
-                `postage_cost`, 
-                `currency_sign`, 
-                `country_id`, 
-                `country`, 
-                `state`, 
-                `city`, 
-                `postcode`, 
-                `address_2`, 
-                `address_1`, 
-                `customer_name`, 
-                `customer_name_last`, 
-                `customer_phone`, 
-                `customer_email`, 
-                `status`, 
-                `payment_channel`, 
-                `payment_code`, 
-                `payment_url`, 
-                `ship_channel`, 
-                `courier_service`, 
-                `awb_number`, 
-                `tracking_url`, 
-                `created_at`, 
-                `updated_at`, 
-                `deleted_at`, 
-                `remark_comment`, 
-                `tracking_milestone`, 
-                `to_myr_rate`, 
-                `myr_value_include_postage`, 
-                `myr_value_without_postage`, 
-                `printed_awb`
-            ) VALUES(
-                NULL, 
-                '" . $_SESSION["session_id"] . "', 
-                '1', 
-                '$product_var_id', 
-                '$qty', 
-                '$tPrice', 
-                '" . $_SESSION["postageCharge"] . "', 
-                '" . $data["sign"] . "', 
-                '$country', 
-                '" . $data["name"] . "', 
-                '" . $_SESSION["state"] . "', 
-                '" . $_SESSION["city"] . "', 
-                '" . $_SESSION["postcode"] . "', 
-                '" . $_SESSION["add_2"] . "', 
-                '" . $_SESSION["add_1"] . "', 
-                '" . $_SESSION["fname"] . "', 
-                '" . $_SESSION["lname"] . "', 
-                '" . $_SESSION["ophone"] . "', 
-                '" . $_SESSION["oemail"] . "', 
-                '0', 
-                'nill', 
-                'nill', 
-                'nill', 
-                'Doorstep Delivery', 
-                '', 
-                '', 
-                '',
-                '$dateNow', 
-                '$dateNow', 
-                NULL, 
-                '" . $_SESSION["remark"] . "', 
-                '', 
-                '1', 
-                '" . $_SESSION["subTotal"] . "', 
-                '$tPrice', 
-                '0'
-            )");
-
-        if ($pendingOrder) {
-            $pendingOrderId = $conn->insert_id;
-
+        if ($pendingOrderId) {
             $order_id = 'ORDERID_' . $pendingOrderId;
             $detail   = 'Payment for ' . $order_id;
-            $amount   = number_format($_SESSION["subTotal"], 2, '.', ''); // Example amount
+            $amount   = number_format($_SESSION["subTotal"], 2, '.', '');
             $name     = $_SESSION["fname"] . ' ' . $_SESSION["lname"];
             $email    = $_SESSION["oemail"];
             $phone    = $_SESSION["ophone"];
@@ -463,47 +492,14 @@ class CheckoutController
                     </body>
                 </html>
             <?php
-
-            // //echo "Payment URL: " . $payment_url . "<br><br>";
-
-
-
-
-            // $ch = curl_init();
-
-            // curl_setopt($ch, CURLOPT_URL, $payment_url);
-            // curl_setopt($ch, CURLOPT_POST, true);
-            // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
-            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            // curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-
-            // $response = curl_exec($ch);
-
-            // curl_close($ch);
-
-            // unset($_SESSION["session_id"]);
-
-            // echo $response;
         }
-
-        //echo "<br>Product Var ID: " . $product_var_id . " (" . $qty . ")<br><br>";
-
-
-
-
-
-
-        // In a real implementation, you would redirect or handle the payment process here
     }
 
     public function callBackSenangPay()
     {
-        $conn = getDbConnection();
         $dateNow = dateNow();
         $domainURL = getMainUrl();
 
-        // Retrieve callback data
         $status_id = $_POST['status_id'];
         $order_id   = $_POST['order_id'];
         $transaction_id   = $_POST['transaction_id'];
@@ -517,79 +513,29 @@ class CheckoutController
 
         $dataOrder = getOrder(1, $order_ids);
 
-        // Fetch SenangPay settings
-        $getSenangPay = $conn->query("SELECT * FROM `senangpay_api` ORDER BY id DESC LIMIT 1");
-        $dataSenangPay = $getSenangPay->fetch_array();
-
-        if ($dataSenangPay["type"] == 'sandbox') {
-            $secret_key  = $dataSenangPay["secret_key"];
+        $settings = $this->senangPayModel->getSettings();
+        if ($settings["type"] == 'sandbox') {
+            $secret_key = $settings["secret_key"];
         } else {
-            $secret_key  = $dataSenangPay["pro_secret_key"];
+            $secret_key = $settings["pro_secret_key"];
         }
 
-        // Verify hash
-        $calculated_hash = hash_hmac('sha256', $secret_key . $detail . $dataOrder["myr_value_include_postage"] . $status_id, $secret_key);
-
-        //if ($hash === $calculated_hash) {
-        // Hash is valid, process the payment status
         if ($status_id == '1') {
+            $this->orderModel->update((int)$order_ids, [
+                'status'          => '1',
+                'payment_channel' => $payment_type,
+                'payment_code'    => $transaction_id,
+                'payment_url'     => $transaction_id,
+                'updated_at'      => $dateNow,
+            ]);
 
-            $conn->query("UPDATE `customer_orders` SET `status`='1', `payment_channel`='$payment_type', `payment_code`='$transaction_id', `payment_url`='$transaction_id', `updated_at`='$dateNow' WHERE `id`='" . $order_ids . "'");
-            $getCartLock = $conn->query("SELECT * FROM `cart_lock_senangpay` WHERE `session_id`='" . $dataOrder["session_id"] . "' AND deleted_at IS NULL");
-            foreach ($getCartLock as $cartLockItem) {
+            $this->completeOrderAfterPayment($order_ids, $dataOrder['customer_name'], $dataOrder['customer_email'], $dateNow, $domainURL);
 
-                $conn->query("UPDATE `cart` SET `updated_at`='$dateNow', `deleted_at`=NULL, `status`='1' WHERE `id`='" . $cartLockItem["cart_id"] . "'");
-            }
-
-            $hashOrder = hash("sha256", $order_ids . "_" . $dataOrder['customer_name'] . "_" . $dateNow);
-            $conn->query("INSERT INTO order_details(order_id, hash_code, created_at) VALUES ('$order_ids','$hashOrder','$dateNow')");
-
-            $emailData = [
-                'CustomerName' => $dataOrder['customer_name'],
-                'OrderID'      => $order_ids,
-                'OrderLink' => $domainURL . "order-details/" . $hashOrder,
-            ];
-
-            $emailHTML = getEmailTemplate($emailData);
-
-            // === SEND EMAIL ===
-            $mail = new PHPMailer(true);
-            try {
-                $mail->isSMTP();
-                $mail->Host       = 'smtp-relay.brevo.com';
-                $mail->SMTPAuth   = true;
-                $mail->Username   = '889d41001@smtp-brevo.com';
-                $mail->Password   = 'xsmtpsib-XXXXXXXXXXXXXXXXXXXX';
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port       = 587;
-
-                $mail->setFrom('orders-noreply@rozeyana.com', 'Rozeyana.com');
-                $mail->addAddress($dataOrder['customer_email'], $dataOrder['customer_name']);
-                $mail->isHTML(true);
-                $mail->Subject = 'Your Order Confirmation - Rozeyana';
-                $mail->Body    = $emailHTML;
-                $mail->AltBody = 'Thank you for your order #' . $order_ids . '. View: ' . $domainURL . 'order-details/' . $hashOrder;
-
-                $mail->send();
-            } catch (Exception $e) {
-                error_log("❌ Mail error: {$mail->ErrorInfo}");
-            }
-            // Payment successful
-            // Update order status in the database
-            // Example: Update customer_orders set status to 'paid' where order_id matches
             echo "OK";
         } else {
-            $conn->query("UPDATE `customer_orders` SET `status`='10' WHERE `id`='" . $order_ids . "'");
-
-            // Payment failed or pending
-            // Handle accordingly
+            $this->orderModel->updateStatus((int)$order_ids, 10, $dateNow);
             echo "OK";
         }
-        // } else {
-        //     // Invalid hash, possible tampering
-        //     // Log this incident for further investigation
-        //     echo "OK";
-        // }
     }
 
     public function thankYou()
@@ -602,13 +548,11 @@ class CheckoutController
         }
         $domainURL = getMainUrl();
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
+        $conn = $this->conn;
 
         $data = dataCountry($country);
 
         $dateNow = dateNow();
-
-        
 
         if (!isset($_GET["order_id"]) || empty($_GET["order_id"])) {
             header("Location: /");
@@ -618,7 +562,7 @@ class CheckoutController
         $order_ids = str_replace('ORDERID_', '', $_GET["order_id"]);
 
         if (isset($_GET["status_id"]) && $_GET["status_id"] == "1") {
-            $getOrder = $conn->query("SELECT * FROM `order_details` WHERE `order_id`='" . $order_ids . "'")->fetch_assoc();
+            $getOrder = $this->orderDetailModel->findByOrderId($order_ids);
             require_once __DIR__ . '/../../view/ecom/e-senangpay-thank-you-keya88.php';
             exit();
         } else {
@@ -636,7 +580,6 @@ class CheckoutController
             exit;
         }
         $domainURL = getMainUrl();
-        $conn = getDbConnection();
         $data = dataCountry($country);
         $dateNow = dateNow();
 
@@ -645,9 +588,9 @@ class CheckoutController
             exit();
         }
 
-        $getCart = $conn->query("SELECT * FROM `cart` WHERE `session_id`='" . $_SESSION["session_id"] . "' AND `deleted_at` IS NULL AND `status` IN(0,1)");
+        $cartItems = $this->cartModel->getActiveBySession($_SESSION["session_id"]);
 
-        if ($getCart->num_rows < 1) {
+        if (empty($cartItems)) {
             header("Location: " . $domainURL . "checkout");
             exit();
         }
@@ -657,110 +600,15 @@ class CheckoutController
             exit();
         }
 
-        $softDeleteLock = $conn->query("UPDATE `cart_lock_senangpay` SET `deleted_at`= '$dateNow' WHERE `session_id`='" . $_SESSION["session_id"] . "'");
+        $lockResult = $this->lockCartItems($_SESSION["session_id"], $cartItems, $dateNow);
+        $product_var_id = $lockResult['product_var_id'];
+        $qty = $lockResult['qty'];
+        $tPrice = $lockResult['tPrice'];
 
-        $x = 1;
-        $product_var_id = "";
-        $qty = 0;
-        $tPrice = 0;
-        foreach ($getCart as $cartItem) {
-            $dataProduct = GetProductDetails($cartItem["p_id"]);
-            if ($x == 1) {
-                $product_var_id .= "[" . $cartItem["pv_id"] . "]";
-            } else {
-                $product_var_id .= ",[" . $cartItem["pv_id"] . "]";
-            }
-            $qty += $cartItem["quantity"];
-            $tPrice += $cartItem["price"] * $cartItem["quantity"];
+        $orderData = $this->buildOrderData($_SESSION["session_id"], $data, $country, $product_var_id, $qty, $tPrice, 'bayarcash', '0', $_SESSION["subTotal"]);
+        $pendingOrderId = $this->orderModel->createOrder($orderData);
 
-            $getCartLock = $conn->query("SELECT * FROM `cart_lock_senangpay` WHERE `cart_id`='" . $cartItem["id"] . "' AND `session_id`='" . $_SESSION["session_id"] . "'");
-            if ($getCartLock->num_rows > 0) {
-                $dataLock = $getCartLock->fetch_array();
-                $conn->query("UPDATE `cart_lock_senangpay` SET `quantity`='" . $cartItem["quantity"] . "', `price`='" . $cartItem["price"] . "', `weight`='" . $cartItem["weight"] . "', `total_weight`='" . $cartItem["total_weight"] . "', `updated_at`='$dateNow', `locked_date`= '$dateNow', `deleted_at`= NULL WHERE `id`='" . $dataLock["id"] . "'");
-            } else {
-                $conn->query("INSERT INTO `cart_lock_senangpay`(`id`, `cart_id`, `session_id`, `p_id`, `pv_id`, `quantity`, `price`, `weight`, `total_weight`, `currency_sign`, `country_id`, `created_at`, `updated_at`, `locked_date`, `deleted_at`, `status`) VALUES (NULL,'" . $cartItem["id"] . "','" . $_SESSION["session_id"] . "','" . $cartItem["p_id"] . "','" . $cartItem["pv_id"] . "','" . $cartItem["quantity"] . "','" . $cartItem["price"] . "','" . $cartItem["weight"] . "','" . $cartItem["total_weight"] . "','" . $cartItem["currency_sign"] . "','" . $cartItem["country_id"] . "','$dateNow','$dateNow', '$dateNow', NULL, '0')");
-            }
-            $x++;
-        }
-
-        $pendingOrder = $conn->query("INSERT INTO customer_orders (
-                `id`,
-                `session_id`,
-                `order_to`,
-                `product_var_id`,
-                `total_qty`,
-                `total_price`,
-                `postage_cost`,
-                `currency_sign`,
-                `country_id`,
-                `country`,
-                `state`,
-                `city`,
-                `postcode`,
-                `address_2`,
-                `address_1`,
-                `customer_name`,
-                `customer_name_last`,
-                `customer_phone`,
-                `customer_email`,
-                `status`,
-                `payment_channel`,
-                `payment_code`,
-                `payment_url`,
-                `ship_channel`,
-                `courier_service`,
-                `awb_number`,
-                `tracking_url`,
-                `created_at`,
-                `updated_at`,
-                `deleted_at`,
-                `remark_comment`,
-                `tracking_milestone`,
-                `to_myr_rate`,
-                `myr_value_include_postage`,
-                `myr_value_without_postage`,
-                `printed_awb`
-            ) VALUES(
-                NULL,
-                '" . $_SESSION["session_id"] . "',
-                '1',
-                '$product_var_id',
-                '$qty',
-                '$tPrice',
-                '" . $_SESSION["postageCharge"] . "',
-                '" . $data["sign"] . "',
-                '$country',
-                '" . $data["name"] . "',
-                '" . $_SESSION["state"] . "',
-                '" . $_SESSION["city"] . "',
-                '" . $_SESSION["postcode"] . "',
-                '" . $_SESSION["add_2"] . "',
-                '" . $_SESSION["add_1"] . "',
-                '" . $_SESSION["fname"] . "',
-                '" . $_SESSION["lname"] . "',
-                '" . $_SESSION["ophone"] . "',
-                '" . $_SESSION["oemail"] . "',
-                '0',
-                'bayarcash',
-                'nill',
-                'nill',
-                'Doorstep Delivery',
-                '',
-                '',
-                '',
-                '$dateNow',
-                '$dateNow',
-                NULL,
-                '" . $_SESSION["remark"] . "',
-                '',
-                '1',
-                '" . $_SESSION["subTotal"] . "',
-                '$tPrice',
-                '0'
-            )");
-
-        if ($pendingOrder) {
-            $pendingOrderId = $conn->insert_id;
+        if ($pendingOrderId) {
             $orderNumber = 'ORDERID_' . $pendingOrderId;
             $amount = number_format($_SESSION["subTotal"], 2, '.', '');
             $name = $_SESSION["fname"] . ' ' . $_SESSION["lname"];
@@ -776,7 +624,15 @@ class CheckoutController
             $intent = $bayarcash->createPaymentIntent($orderNumber, $amount, $name, $email, $phone, $callbackUrl, $returnUrl);
 
             $paymentIntentId = $intent['id'] ?? null;
-            $conn->query("INSERT INTO `bayarcash_transactions` (`order_id`, `order_number`, `payment_intent_id`, `amount`, `status`, `created_at`, `updated_at`) VALUES ('$pendingOrderId', '$orderNumber', '$paymentIntentId', '$amount', '0', '$dateNow', '$dateNow')");
+            $this->bayarcashTxModel->createTransaction([
+                'order_id'           => $pendingOrderId,
+                'order_number'       => $orderNumber,
+                'payment_intent_id'  => $paymentIntentId,
+                'amount'             => $amount,
+                'status'             => '0',
+                'created_at'         => $dateNow,
+                'updated_at'         => $dateNow,
+            ]);
 
             $redirectUrl = $bayarcash->getRedirectUrl($intent);
             unset($_SESSION["session_id"]);
@@ -793,7 +649,6 @@ class CheckoutController
 
     public function callBackBayarcash()
     {
-        $conn = getDbConnection();
         $dateNow = dateNow();
         $domainURL = getMainUrl();
 
@@ -809,52 +664,32 @@ class CheckoutController
         if ($result['success'] && $result['is_paid']) {
             $dataOrder = getOrder(1, $order_ids);
 
-            $conn->query("UPDATE `customer_orders` SET `status`='1', `payment_channel`='bayarcash', `payment_code`='" . $result['transaction_id'] . "', `payment_url`='" . $result['transaction_id'] . "', `updated_at`='$dateNow' WHERE `id`='" . $order_ids . "'");
+            $this->orderModel->update((int)$order_ids, [
+                'status'          => '1',
+                'payment_channel' => 'bayarcash',
+                'payment_code'    => $result['transaction_id'],
+                'payment_url'     => $result['transaction_id'],
+                'updated_at'      => $dateNow,
+            ]);
 
-            $getCartLock = $conn->query("SELECT * FROM `cart_lock_senangpay` WHERE `session_id`='" . $dataOrder["session_id"] . "' AND deleted_at IS NULL");
-            foreach ($getCartLock as $cartLockItem) {
-                $conn->query("UPDATE `cart` SET `updated_at`='$dateNow', `deleted_at`=NULL, `status`='1' WHERE `id`='" . $cartLockItem["cart_id"] . "'");
-            }
+            $this->completeOrderAfterPayment($order_ids, $dataOrder['customer_name'], $dataOrder['customer_email'], $dateNow, $domainURL);
 
-            $hashOrder = hash("sha256", $order_ids . "_" . $dataOrder['customer_name'] . "_" . $dateNow);
-            $conn->query("INSERT INTO order_details(order_id, hash_code, created_at) VALUES ('$order_ids','$hashOrder','$dateNow')");
-
-            $emailData = [
-                'CustomerName' => $dataOrder['customer_name'],
-                'OrderID'      => $order_ids,
-                'OrderLink'    => $domainURL . "order-details/" . $hashOrder,
-            ];
-
-            $emailHTML = getEmailTemplate($emailData);
-
-            $mail = new PHPMailer(true);
-            try {
-                $mail->isSMTP();
-                $mail->Host       = 'smtp-relay.brevo.com';
-                $mail->SMTPAuth   = true;
-                $mail->Username   = '889d41001@smtp-brevo.com';
-                $mail->Password   = 'xsmtpsib-XXXXXXXXXXXXXXXXXXXX';
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port       = 587;
-
-                $mail->setFrom('orders-noreply@rozeyana.com', 'Rozeyana.com');
-                $mail->addAddress($dataOrder['customer_email'], $dataOrder['customer_name']);
-                $mail->isHTML(true);
-                $mail->Subject = 'Your Order Confirmation - Rozeyana';
-                $mail->Body    = $emailHTML;
-                $mail->AltBody = 'Thank you for your order #' . $order_ids . '. View: ' . $domainURL . 'order-details/' . $hashOrder;
-
-                $mail->send();
-            } catch (Exception $e) {
-                error_log("Mail error: {$mail->ErrorInfo}");
-            }
-
-            $conn->query("UPDATE `bayarcash_transactions` SET `status`='3', `transaction_id`='" . $result['transaction_id'] . "', `payment_channel`='" . $result['payment_channel'] . "', `callback_payload`='" . $conn->real_escape_string($callbackPayload) . "', `updated_at`='$dateNow' WHERE `order_number`='$orderNumber'");
+            $this->bayarcashTxModel->updateByOrderNumber($orderNumber, [
+                'status'           => '3',
+                'transaction_id'   => $result['transaction_id'],
+                'payment_channel'  => $result['payment_channel'],
+                'callback_payload' => $callbackPayload,
+                'updated_at'       => $dateNow,
+            ]);
 
             echo "OK";
         } else {
-            $conn->query("UPDATE `customer_orders` SET `status`='10' WHERE `id`='" . $order_ids . "'");
-            $conn->query("UPDATE `bayarcash_transactions` SET `status`='2', `callback_payload`='" . $conn->real_escape_string($callbackPayload) . "', `updated_at`='$dateNow' WHERE `order_number`='$orderNumber'");
+            $this->orderModel->updateStatus((int)$order_ids, 10, $dateNow);
+            $this->bayarcashTxModel->updateByOrderNumber($orderNumber, [
+                'status'           => '2',
+                'callback_payload' => $callbackPayload,
+                'updated_at'       => $dateNow,
+            ]);
 
             echo "OK";
         }
@@ -869,7 +704,6 @@ class CheckoutController
             exit;
         }
         $domainURL = getMainUrl();
-        $conn = getDbConnection();
         $data = dataCountry($country);
         $dateNow = dateNow();
 
@@ -878,9 +712,9 @@ class CheckoutController
             exit();
         }
 
-        $getCart = $conn->query("SELECT * FROM `cart` WHERE `session_id`='" . $_SESSION["session_id"] . "' AND `deleted_at` IS NULL AND `status` IN(0,1)");
+        $cartItems = $this->cartModel->getActiveBySession($_SESSION["session_id"]);
 
-        if ($getCart->num_rows < 1) {
+        if (empty($cartItems)) {
             header("Location: " . $domainURL . "checkout");
             exit();
         }
@@ -890,121 +724,25 @@ class CheckoutController
             exit();
         }
 
-        $softDeleteLock = $conn->query("UPDATE `cart_lock_senangpay` SET `deleted_at`= '$dateNow' WHERE `session_id`='" . $_SESSION["session_id"] . "'");
-
-        $x = 1;
-        $product_var_id = "";
-        $qty = 0;
-        $tPrice = 0;
-        foreach ($getCart as $cartItem) {
-            $dataProduct = GetProductDetails($cartItem["p_id"]);
-            if ($x == 1) {
-                $product_var_id .= "[" . $cartItem["pv_id"] . "]";
-            } else {
-                $product_var_id .= ",[" . $cartItem["pv_id"] . "]";
-            }
-            $qty += $cartItem["quantity"];
-            $tPrice += $cartItem["price"] * $cartItem["quantity"];
-
-            $getCartLock = $conn->query("SELECT * FROM `cart_lock_senangpay` WHERE `cart_id`='" . $cartItem["id"] . "' AND `session_id`='" . $_SESSION["session_id"] . "'");
-            if ($getCartLock->num_rows > 0) {
-                $dataLock = $getCartLock->fetch_array();
-                $conn->query("UPDATE `cart_lock_senangpay` SET `quantity`='" . $cartItem["quantity"] . "', `price`='" . $cartItem["price"] . "', `weight`='" . $cartItem["weight"] . "', `total_weight`='" . $cartItem["total_weight"] . "', `updated_at`='$dateNow', `locked_date`= '$dateNow', `deleted_at`= NULL WHERE `id`='" . $dataLock["id"] . "'");
-            } else {
-                $conn->query("INSERT INTO `cart_lock_senangpay`(`id`, `cart_id`, `session_id`, `p_id`, `pv_id`, `quantity`, `price`, `weight`, `total_weight`, `currency_sign`, `country_id`, `created_at`, `updated_at`, `locked_date`, `deleted_at`, `status`) VALUES (NULL,'" . $cartItem["id"] . "','" . $_SESSION["session_id"] . "','" . $cartItem["p_id"] . "','" . $cartItem["pv_id"] . "','" . $cartItem["quantity"] . "','" . $cartItem["price"] . "','" . $cartItem["weight"] . "','" . $cartItem["total_weight"] . "','" . $cartItem["currency_sign"] . "','" . $cartItem["country_id"] . "','$dateNow','$dateNow', '$dateNow', NULL, '0')");
-            }
-            $x++;
-        }
+        $lockResult = $this->lockCartItems($_SESSION["session_id"], $cartItems, $dateNow);
+        $product_var_id = $lockResult['product_var_id'];
+        $qty = $lockResult['qty'];
+        $tPrice = $lockResult['tPrice'];
 
         $codFee = isset($_SESSION["codFee"]) ? $_SESSION["codFee"] : 0;
         $subTotal = $_SESSION["subTotal"] + $codFee;
 
-        $codOrder = $conn->query("INSERT INTO customer_orders (
-                `id`,
-                `session_id`,
-                `order_to`,
-                `product_var_id`,
-                `total_qty`,
-                `total_price`,
-                `postage_cost`,
-                `currency_sign`,
-                `country_id`,
-                `country`,
-                `state`,
-                `city`,
-                `postcode`,
-                `address_2`,
-                `address_1`,
-                `customer_name`,
-                `customer_name_last`,
-                `customer_phone`,
-                `customer_email`,
-                `status`,
-                `payment_channel`,
-                `payment_code`,
-                `payment_url`,
-                `ship_channel`,
-                `courier_service`,
-                `awb_number`,
-                `tracking_url`,
-                `created_at`,
-                `updated_at`,
-                `deleted_at`,
-                `remark_comment`,
-                `tracking_milestone`,
-                `to_myr_rate`,
-                `myr_value_include_postage`,
-                `myr_value_without_postage`,
-                `printed_awb`
-            ) VALUES(
-                NULL,
-                '" . $_SESSION["session_id"] . "',
-                '1',
-                '$product_var_id',
-                '$qty',
-                '$tPrice',
-                '" . $_SESSION["postageCharge"] . "',
-                '" . $data["sign"] . "',
-                '$country',
-                '" . $data["name"] . "',
-                '" . $_SESSION["state"] . "',
-                '" . $_SESSION["city"] . "',
-                '" . $_SESSION["postcode"] . "',
-                '" . $_SESSION["add_2"] . "',
-                '" . $_SESSION["add_1"] . "',
-                '" . $_SESSION["fname"] . "',
-                '" . $_SESSION["lname"] . "',
-                '" . $_SESSION["ophone"] . "',
-                '" . $_SESSION["oemail"] . "',
-                '1',
-                'COD',
-                'COD',
-                'COD',
-                'COD',
-                '',
-                '',
-                '',
-                '$dateNow',
-                '$dateNow',
-                NULL,
-                '" . $_SESSION["remark"] . "',
-                '',
-                '1',
-                '$subTotal',
-                '$tPrice',
-                '0'
-            )");
+        $orderData = $this->buildOrderData($_SESSION["session_id"], $data, $country, $product_var_id, $qty, $tPrice, 'COD', '1', $subTotal);
+        $codOrderId = $this->orderModel->createOrder($orderData);
 
-        if ($codOrder) {
-            $codOrderId = $conn->insert_id;
-
-            $getCartLock = $conn->query("SELECT * FROM `cart_lock_senangpay` WHERE `session_id`='" . $_SESSION["session_id"] . "' AND deleted_at IS NULL");
-            foreach ($getCartLock as $cartLockItem) {
-                $conn->query("UPDATE `cart` SET `updated_at`='$dateNow', `deleted_at`=NULL, `status`='1' WHERE `id`='" . $cartLockItem["cart_id"] . "'");
+        if ($codOrderId) {
+            $lockedItems = $this->cartLockModel->getActiveBySession($_SESSION["session_id"]);
+            foreach ($lockedItems as $cartLockItem) {
+                $this->cartModel->restoreAndMarkPaid($cartLockItem["cart_id"], $dateNow);
             }
 
             $hashOrder = hash("sha256", $codOrderId . "_" . $_SESSION["fname"] . "_" . $dateNow);
-            $conn->query("INSERT INTO order_details(order_id, hash_code, created_at) VALUES ('$codOrderId','$hashOrder','$dateNow')");
+            $this->orderDetailModel->createDetail($codOrderId, $hashOrder, $dateNow);
 
             $emailData = [
                 'CustomerName' => $_SESSION["fname"],
@@ -1039,7 +777,7 @@ class CheckoutController
             unset($_SESSION["session_id"]);
 
             $isCOD = true;
-            $getOrder = $conn->query("SELECT * FROM `order_details` WHERE `order_id`='" . $codOrderId . "'")->fetch_assoc();
+            $getOrder = $this->orderDetailModel->findByOrderId($codOrderId);
             require_once __DIR__ . '/../../view/ecom/e-senangpay-thank-you-keya88.php';
             exit();
         }
@@ -1054,7 +792,7 @@ class CheckoutController
             exit;
         }
         $domainURL = getMainUrl();
-        $conn = getDbConnection();
+        $conn = $this->conn;
         $data = dataCountry($country);
 
         if (!isset($_GET["order_id"]) || empty($_GET["order_id"])) {
@@ -1066,7 +804,7 @@ class CheckoutController
         $dataOrder = getOrder(1, $order_ids);
 
         if ($dataOrder && $dataOrder["status"] == "1") {
-            $getOrder = $conn->query("SELECT * FROM `order_details` WHERE `order_id`='" . $order_ids . "'")->fetch_assoc();
+            $getOrder = $this->orderDetailModel->findByOrderId($order_ids);
             require_once __DIR__ . '/../../view/ecom/e-senangpay-thank-you-keya88.php';
             exit();
         } else {

@@ -40,4 +40,10 @@ class ListCountry extends BaseModel
             $data['sign'], $data['rate'], $data['updated_at'], $data['status'], $id
         ]);
     }
+
+    public function getActiveWithDetails()
+    {
+        $sql = "SELECT `id`, `name`, `sign`, `rate`, `phone_code` FROM `list_country` WHERE `status` = 1";
+        return $this->query($sql);
+    }
 }

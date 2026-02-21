@@ -56,4 +56,17 @@ class Category extends BaseModel
         $rows = $this->query($sql, "i", [$id]);
         return (int) ($rows[0]['cnt'] ?? 0);
     }
+
+    public function getList()
+    {
+        $sql = "SELECT `id`, `name`, `slug`, `image` FROM `categories` WHERE `deleted_at` IS NULL";
+        return $this->query($sql);
+    }
+
+    public function countActive()
+    {
+        $sql = "SELECT COUNT(*) AS cnt FROM `categories` WHERE `deleted_at` IS NULL";
+        $rows = $this->query($sql);
+        return (int) ($rows[0]['cnt'] ?? 0);
+    }
 }
