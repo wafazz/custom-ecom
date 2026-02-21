@@ -19,4 +19,11 @@ class Member extends BaseModel
         $rows = $this->query($sql, "s", ["%{$phone}%"]);
         return (int) ($rows[0]['cnt'] ?? 0) > 0;
     }
+
+    public function findActiveById($id)
+    {
+        $sql = "SELECT * FROM `member` WHERE `id` = ? AND `status` = '1'";
+        $rows = $this->query($sql, "i", [$id]);
+        return $rows[0] ?? null;
+    }
 }

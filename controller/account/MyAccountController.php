@@ -2,13 +2,25 @@
 namespace Account;
 
 require_once __DIR__ . '/../../config/mainConfig.php';
+require_once __DIR__ . '/../../model/ShopCategory.php';
 
 class MyAccountController {
+
+    private $domainURL;
+    private $conn;
+    private $shopCategoryModel;
+
+    public function __construct()
+    {
+        $this->domainURL = getMainUrl();
+        $this->conn = getDbConnection();
+        $this->shopCategoryModel = new \ShopCategory($this->conn);
+    }
+
     public function index() {
 
-        $domainURL = getMainUrl();
+        $domainURL = $this->domainURL;
         $mainDomain = mainDomain();
-        $conn = getDbConnection();
         $pageid = 2;
         $pageName = "MY ACCOUNT";
         if(!isset($_SESSION["referby"])){
@@ -26,19 +38,13 @@ class MyAccountController {
 
         $cartId = $_SESSION["web_cart_id"];
 
-        
+
         $userData = userData($_SESSION["referby"]);
 
         $theUserId = $userData["id"];
 
-        $sql = "SELECT * FROM category WHERE `status`='1' AND assigned_user LIKE '%[$theUserId]%'";
-        $result = $conn->query($sql);
-        $category = [];
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $category[] = $row;
-            }
-        } else {
+        $category = $this->shopCategoryModel->getByAssignedUser($theUserId);
+        if (empty($category)) {
             echo "No category found.";
         }
 
@@ -51,14 +57,6 @@ class MyAccountController {
 
         $memberPoint = memberPoint($_SESSION["membership"]);
 
-        
-
-        // Close the connection
-        $conn->close();
-
-        //echo "My Account";
-
-        //echo "Product Page for id: ".$id;
         require_once __DIR__ . '/../../view/shop/my-account.php';
     }
 

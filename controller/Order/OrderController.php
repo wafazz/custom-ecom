@@ -5,6 +5,8 @@ namespace Order;
 require_once __DIR__ . '/../../config/mainConfig.php';
 require_once __DIR__ . '/../../model/Order.php';
 require_once __DIR__ . '/../../model/Cart.php';
+require_once __DIR__ . '/../../model/ProductVariant.php';
+require_once __DIR__ . '/../../model/Product.php';
 
 class OrderController
 {
@@ -16,6 +18,8 @@ class OrderController
 
     private $orderModel;
     private $cartModel;
+    private $productVariantModel;
+    private $productModel;
 
     public function __construct()
     {
@@ -30,8 +34,10 @@ class OrderController
         $this->currentYear = currentYear();
         $this->dateNow     = dateNow();
 
-        $this->orderModel = new \Order($this->conn);
-        $this->cartModel  = new \Cart($this->conn);
+        $this->orderModel          = new \Order($this->conn);
+        $this->cartModel           = new \Cart($this->conn);
+        $this->productVariantModel = new \ProductVariant($this->conn);
+        $this->productModel        = new \Product($this->conn);
     }
 
     private function checkAccess($segment = null)
@@ -233,7 +239,6 @@ class OrderController
         $this->checkAccess();
 
         $domainURL = $this->domainURL;
-        $conn      = $this->conn;
 
         if (!empty($_GET["order_id"])) {
             $id = $_GET["order_id"];
@@ -333,31 +338,20 @@ class OrderController
                     $parts = explode(",", $string);
 
                     foreach ($parts as $varID) {
-                        $id = str_replace(['[', ']'], '', $varID);
+                        $variantId = (int) str_replace(['[', ']'], '', $varID);
 
-                        $sql1 = "SELECT * FROM product_variants WHERE id='$id'";
-                        $result1 = $conn->query($sql1);
-
-                        while ($row1 = $result1->fetch_assoc()) {
+                        $row1 = $this->productVariantModel->getById($variantId);
+                        if ($row1) {
                             $product_id = $row1["product_id"];
-                            $pv_id = $row1["id"];
 
-                            $sql11 = "SELECT * FROM `products` WHERE `id`='$product_id'";
-                            $result11 = $conn->query($sql11);
-                            $row11 = $result11->fetch_assoc();
-
-                            $sql111 = "SELECT * FROM `product_image` WHERE `product_id`='$product_id' ORDER BY id ASC LIMIT 1";
-                            $result111 = $conn->query($sql111);
-                            $row111 = $result111->fetch_assoc();
-
-                            $sql1111 = "SELECT * FROM cart WHERE `session_id`='$session_id' AND p_id='$product_id' AND pv_id='$id' AND deleted_at IS NULL";
-                            $result1111 = $conn->query($sql1111);
-                            $row1111 = $result1111->fetch_assoc();
+                            $row11 = $this->productModel->getById($product_id);
+                            $imgData = $this->productModel->getFirstImage($product_id);
+                            $row1111 = $this->cartModel->findBySessionProductVariant($session_id, $product_id, $variantId);
                     ?>
                             <tr>
                                 <td>
                                     <div class="text-wrap-image">
-                                        <img src="<?= $domainURL ?>assets/images/products/<?= $row111['image'] ?>" style="width:60px;"
+                                        <img src="<?= $domainURL ?>assets/images/products/<?= $imgData['image'] ?? '' ?>" style="width:60px;"
                                             alt="Example" class="wrap-img">
                                         <p>
                                             (
@@ -368,7 +362,7 @@ class OrderController
                                 </td>
                                 <td>
                                     x
-                                    <?= $row1111['quantity'] ?>
+                                    <?= $row1111['quantity'] ?? 0 ?>
                                 </td>
                             </tr>
                         <?php
@@ -428,13 +422,11 @@ class OrderController
         $this->checkAccess();
 
         $domainURL = $this->domainURL;
-        $conn      = $this->conn;
 
         if (!empty($_GET["order_id"])) {
             $id = $_GET["order_id"];
 
             $row = $this->orderModel->getOrderDetails($id);
-            $session_id = $row["session_id"];
 ?>
             <h5>Order Details for Order #
                 <?= str_pad($_GET["order_id"], 8, "0", STR_PAD_LEFT); ?>

@@ -147,4 +147,11 @@ class Cart extends BaseModel
         $sql = "UPDATE `cart` SET `deleted_at` = ?, `status` = ? WHERE `id` = ?";
         return $this->execute($sql, "ssi", [$dateNow, $status, $id]);
     }
+
+    public function findBySessionProductVariant($sessionId, $productId, $variantId)
+    {
+        $sql = "SELECT * FROM `cart` WHERE `session_id` = ? AND `p_id` = ? AND `pv_id` = ? AND `deleted_at` IS NULL";
+        $rows = $this->query($sql, "sii", [$sessionId, $productId, $variantId]);
+        return $rows[0] ?? null;
+    }
 }

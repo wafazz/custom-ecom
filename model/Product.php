@@ -224,6 +224,13 @@ class Product extends BaseModel
         return $this->query($sql, "si", [$countryId, $limit]);
     }
 
+    public function getById($id)
+    {
+        $sql = "SELECT * FROM `products` WHERE `id` = ?";
+        $rows = $this->query($sql, "i", [$id]);
+        return $rows[0] ?? null;
+    }
+
     public function slugExists($slug, $excludeId = null)
     {
         if ($excludeId) {

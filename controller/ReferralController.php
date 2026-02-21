@@ -1,22 +1,33 @@
 <?php
 // controllers/ReferralController.php
 
+require_once __DIR__ . '/../config/mainConfig.php';
+require_once __DIR__ . '/../model/Member.php';
+
 class ReferralController {
-    public function index($id) {
-        $domainURL = getMainUrl();
+
+    private $domainURL;
+    private $memberModel;
+
+    public function __construct()
+    {
+        $this->domainURL = getMainUrl();
         $conn = getDbConnection();
-    
+        $this->memberModel = new Member($conn);
+    }
+
+    public function index($id) {
+        $domainURL = $this->domainURL;
+
         if (ctype_digit($id)) {
 
-            $sql = "SELECT * FROM `member` WHERE `id`='$id' AND `status`='1'";
-            $result = $conn->query($sql);
+            $member = $this->memberModel->findActiveById((int) $id);
 
-            if($result->num_rows < 1){
-                echo $result->num_rows;
-                ob_start(); // Start output buffering
+            if (!$member) {
+                ob_start();
                 header("Location: ".$domainURL."referby/1");
                 exit;
-            }else{
+            } else {
                 $userData = userData($id);
                 $_SESSION["referby"] = $id;
                 $_SESSION["referName"] = $userData["m_name"];
@@ -24,7 +35,7 @@ class ReferralController {
             }
 
         } else {
-            ob_start(); // Start output buffering
+            ob_start();
             header("Location: ".$domainURL."referby/1");
             exit;
         }
