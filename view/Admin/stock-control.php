@@ -28,10 +28,10 @@ include "01-menu.php";
     margin-bottom: 20px;overflow-x: auto !important;">
 
                         <?php
-                        if ($result->num_rows > 0) {
+                        if (!empty($stockRows)) {
                             // Group rows by product_id
                             $products = [];
-                            while ($row = $result->fetch_assoc()) {
+                            foreach ($stockRows as $row) {
                                 $pid = $row['product_id'];
                                 if (!isset($products[$pid])) {
                                     $products[$pid] = [
@@ -263,7 +263,6 @@ include "01-menu.php";
         <thead><tr><th colspan='10'>No records found.</th></tr></thead>
     </table>";
                             }
-                            $conn->close();
                                 ?>
 
                                 <script>

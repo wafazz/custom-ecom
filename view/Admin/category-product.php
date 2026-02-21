@@ -59,8 +59,8 @@ include "01-menu.php";
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if ($result->num_rows > 0): ?>
-                                    <?php while ($row = $result->fetch_assoc()): ?>
+                                <?php if (!empty($categories)): ?>
+                                    <?php foreach ($categories as $row): ?>
                                         <?php $countC = getUsedCategory($row['id']); ?>
                                         <tr>
                                             <td>
@@ -131,7 +131,7 @@ include "01-menu.php";
                                                 <?= dateFromat1($row['updated_at']) ?>
                                             </td>
                                         </tr>
-                                    <?php endwhile; ?>
+                                    <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
                                         <td colspan="10">No soft-deleted categories found.</td>
