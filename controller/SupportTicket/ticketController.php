@@ -62,16 +62,7 @@ class ticketController
             exit;
         }
 
-        $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = $this->conn;
-        $country = allSaleCountry();
-
-        $currentPaths = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-        $segmentss = explode('/', $currentPaths);
-        $firstSegments = $segmentss[0];
-
-        $ticketId = $_GET['id'];
+        $ticketId = intval($_GET['id'] ?? 0);
 
         $ticket = $this->ticketModel->getTicketById($ticketId);
 
@@ -118,35 +109,20 @@ class ticketController
     {
         header('Content-Type: application/json');
 
-        if (isset($_COOKIE['country'])) {
-            $country = intval($_COOKIE['country'] ?? 0);
-        } else {
-            $country = 1;
+        if (!is_login()) {
+            echo json_encode(["success" => false, "message" => "Unauthorized"]);
+            exit;
         }
 
         $domainURL = getMainUrl();
-        $mainDomain = mainDomain();
-        $conn = $this->conn;
-        $currentYear = currentYear();
-        $dateNow = dateNow();
-        $pageName = "Main";
-
-        $data = dataCountry($country);
-
-        $brands = getListCategoryBrand(1);
-        $categories = getListCategoryBrand(2);
-        $categories2 = getListCategoryBrand2(2);
-        $categories3 = getListCategoryBrand2(2);
-
-        $newArrival = newProduct(8);
 
         if (!isset($_POST['ticket_id'])) {
             echo json_encode(["success" => false, "message" => "No ticket_id found"]);
             exit;
         }
 
-        $ticket_no = mysqli_real_escape_string($conn, $_POST['ticket_id']);
-        $message = mysqli_real_escape_string($conn, $_POST['message']);
+        $ticket_no = trim($_POST['ticket_id']);
+        $message = trim($_POST['message']);
 
         $ticket = $this->ticketModel->getTicketById($ticket_no);
         if (!$ticket) {
@@ -161,7 +137,7 @@ class ticketController
             'user_type' => 'staff',
             'user_id' => 0,
             'message' => $message,
-            'created_at' => date("Y-m-d H:i:s")
+            'created_at' => dateNow()
         ]);
 
         if (!$reply_id) {
@@ -206,7 +182,7 @@ class ticketController
                     'filename' => $newName,
                     'file_path' => $savePath,
                     'file_type' => $mimeType,
-                    'created_at' => date("Y-m-d H:i:s")
+                    'created_at' => dateNow()
                 ]);
 
                 $replyAttachments[] = [
@@ -353,7 +329,7 @@ class ticketController
                     "sender"      => "staff",
                     "senderName"  => "Staff",
                     "message"     => stripslashes($message),
-                    "created_at"  => date("Y-m-d H:i:s"),
+                    "created_at"  => dateNow(),
                     "attachments" => $replyAttachments
                 ]
             ]);
@@ -366,7 +342,7 @@ class ticketController
                     "sender"      => "staff",
                     "senderName"  => "Staff",
                     "message"     => stripslashes($message),
-                    "created_at"  => date("Y-m-d H:i:s"),
+                    "created_at"  => dateNow(),
                     "attachments" => $replyAttachments
                 ],
                 "emailWarning" => "Reply saved but email notification failed"
@@ -378,6 +354,11 @@ class ticketController
 
     public function closeTicket()
     {
+        if (!is_login()) {
+            header("Location: login");
+            exit;
+        }
+
         $domainURL = getMainUrl();
 
         if (!isset($_GET['ticket_id'])) {
