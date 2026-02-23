@@ -832,7 +832,15 @@ class CheckoutController
         }
 
         $order_ids = str_replace('ORDERID_', '', $_GET["order_id"]);
-        $dataOrder = getOrder(1, $order_ids);
+
+        $dataOrder = null;
+        for ($i = 0; $i < 5; $i++) {
+            $dataOrder = getOrder(1, $order_ids);
+            if ($dataOrder && $dataOrder["status"] == "1") {
+                break;
+            }
+            sleep(2);
+        }
 
         if ($dataOrder && $dataOrder["status"] == "1") {
             $getOrder = $this->orderDetailModel->findByOrderId($order_ids);

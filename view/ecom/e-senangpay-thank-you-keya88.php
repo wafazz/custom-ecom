@@ -156,8 +156,7 @@
         <?php endif; ?>
 
         <div class="btn-group">
-            <!-- Replace with your retry URL -->
-            <a href="<?= $domainURL ?>order-details/<?= $getOrder["hash_code"] ?>" class="btn btn-primary" target="_blank">
+                <a href="<?= $domainURL ?>order-details/<?= $getOrder["hash_code"] ?>" class="btn btn-primary" target="_blank">
                 Order Details
             </a>
 
@@ -166,8 +165,9 @@
             </a>
         </div>
 
+        <?php $storeSettings = getStoreSettings(); ?>
         <div class="footer">
-            © 2026 Your Company Name
+            © <?= date('Y') ?> <a href="<?= $domainURL ?>" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars($storeSettings['company_name'] ?? 'Rozeyana.com') ?></a>
         </div>
     </div>
 

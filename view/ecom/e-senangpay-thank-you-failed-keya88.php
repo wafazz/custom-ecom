@@ -147,9 +147,8 @@
         </div>
 
         <div class="btn-group">
-            <!-- Replace with your retry URL -->
-            <a href="<?= $domainURL ?>pay-again.php?order_id=<?= $order_ids ?>" class="btn btn-primary">
-                Pay Again
+            <a href="<?= $domainURL ?>checkout" class="btn btn-primary">
+                Try Again
             </a>
 
             <a href="<?= $domainURL ?>main" class="btn btn-outline">
@@ -157,8 +156,9 @@
             </a>
         </div>
 
+        <?php $storeSettings = getStoreSettings(); ?>
         <div class="footer">
-            © 2026 <a href="<?= $domainURL ?>" target="_blank" rel="noopener noreferrer">Rozeyana.com</a>
+            © <?= date('Y') ?> <a href="<?= $domainURL ?>" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars($storeSettings['company_name'] ?? 'Rozeyana.com') ?></a>
         </div>
     </div>
 
