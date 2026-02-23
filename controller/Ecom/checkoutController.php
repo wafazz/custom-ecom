@@ -516,18 +516,12 @@ class CheckoutController
         $dateNow = dateNow();
         $domainURL = getMainUrl();
 
-        $status_id = $_POST['status_id'];
-        $order_id   = $_POST['order_id'];
-        $transaction_id   = $_POST['transaction_id'];
-        $msg   = $_POST['msg'];
-        $hash   = $_POST['hash'];
-        $payment_type   = $_POST['payment_type'];
-        $channel   = $_POST['channel'];
-
-        $order_ids = str_replace('ORDERID_', '', $order_id);
-        $detail   = 'Payment for Order ' . $order_ids;
-
-        $dataOrder = getOrder(1, $order_ids);
+        $status_id = $_POST['status_id'] ?? '';
+        $order_id = $_POST['order_id'] ?? '';
+        $transaction_id = $_POST['transaction_id'] ?? '';
+        $msg = $_POST['msg'] ?? '';
+        $hash = $_POST['hash'] ?? '';
+        $payment_type = $_POST['payment_type'] ?? '';
 
         $settings = $this->senangPayModel->getSettings();
         if ($settings["type"] == 'sandbox') {
@@ -535,6 +529,17 @@ class CheckoutController
         } else {
             $secret_key = $settings["pro_secret_key"];
         }
+
+        $computed_hash = hash_hmac('sha256', $secret_key . urldecode($status_id) . urldecode($order_id) . urldecode($transaction_id) . urldecode($msg), $secret_key);
+
+        if ($computed_hash != urldecode($hash)) {
+            http_response_code(400);
+            echo "INVALID HASH";
+            return;
+        }
+
+        $order_ids = str_replace('ORDERID_', '', $order_id);
+        $dataOrder = getOrder(1, $order_ids);
 
         if ($status_id == '1') {
             $this->orderModel->update((int)$order_ids, [
@@ -570,14 +575,24 @@ class CheckoutController
 
         $dateNow = dateNow();
 
-        if (!isset($_GET["order_id"]) || empty($_GET["order_id"])) {
+        if (!isset($_GET["order_id"]) || empty($_GET["order_id"]) || !isset($_GET["status_id"]) || !isset($_GET["transaction_id"]) || !isset($_GET["msg"]) || !isset($_GET["hash"])) {
+            header("Location: /");
+            exit();
+        }
+
+        $settings = $this->senangPayModel->getSettings();
+        $secret_key = ($settings["type"] == 'sandbox') ? $settings["secret_key"] : $settings["pro_secret_key"];
+
+        $computed_hash = hash_hmac('sha256', $secret_key . urldecode($_GET['status_id']) . urldecode($_GET['order_id']) . urldecode($_GET['transaction_id']) . urldecode($_GET['msg']), $secret_key);
+
+        if ($computed_hash != urldecode($_GET['hash'])) {
             header("Location: /");
             exit();
         }
 
         $order_ids = str_replace('ORDERID_', '', $_GET["order_id"]);
 
-        if (isset($_GET["status_id"]) && $_GET["status_id"] == "1") {
+        if ($_GET["status_id"] == "1") {
             $getOrder = $this->orderDetailModel->findByOrderId($order_ids);
             require_once __DIR__ . '/../../view/ecom/e-senangpay-thank-you-keya88.php';
             exit();
