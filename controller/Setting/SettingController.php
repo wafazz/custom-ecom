@@ -713,7 +713,7 @@ class SettingController
     {
         $this->checkAccess('store-setting');
 
-        $keys = ['footer_address', 'footer_phone', 'footer_copyright_text', 'footer_copyright_url'];
+        $keys = ['company_name', 'footer_address', 'footer_phone', 'footer_email', 'footer_copyright_text', 'footer_copyright_url'];
         foreach ($keys as $key) {
             $value = $_POST[$key] ?? '';
             $this->storeSetting->updateSetting($key, $value);

@@ -20,6 +20,13 @@ include "01-menu.php";
                         <form action="<?= $domainURL ?>store-setting" method="post" style="padding:10px; border:1px solid #dee2e6; border-radius:5px;">
 
                             <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="company_name" class="form-label">Company Name</label>
+                                    <input type="text" class="form-control" id="company_name" name="company_name" value="<?= htmlspecialchars($storeSettings['company_name'] ?? '') ?>">
+                                </div>
+                            </div>
+
+                            <div class="row">
                                 <div class="col-md-12 mb-3">
                                     <label for="footer_address" class="form-label">Footer Address</label>
                                     <textarea class="form-control" id="footer_address" name="footer_address" rows="3"><?= htmlspecialchars($storeSettings['footer_address'] ?? '') ?></textarea>
@@ -30,6 +37,10 @@ include "01-menu.php";
                                 <div class="col-md-6 mb-3">
                                     <label for="footer_phone" class="form-label">Footer Phone</label>
                                     <input type="text" class="form-control" id="footer_phone" name="footer_phone" value="<?= htmlspecialchars($storeSettings['footer_phone'] ?? '') ?>">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="footer_email" class="form-label">Footer Email</label>
+                                    <input type="email" class="form-control" id="footer_email" name="footer_email" value="<?= htmlspecialchars($storeSettings['footer_email'] ?? '') ?>">
                                 </div>
                             </div>
 
