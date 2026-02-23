@@ -54,19 +54,19 @@ class Bayarcash extends BaseModel
     public function updateSandbox($apiToken, $secretKey, $portalKey)
     {
         $sql = "UPDATE `bayarcash_api` SET `sandbox_api_token` = ?, `sandbox_secret_key` = ?, `sandbox_portal_key` = ? ORDER BY id DESC LIMIT 1";
-        $this->execute($sql, [$apiToken, $secretKey, $portalKey]);
+        $this->execute($sql, 'sss', [$apiToken, $secretKey, $portalKey]);
     }
 
     public function updateProduction($apiToken, $secretKey, $portalKey)
     {
         $sql = "UPDATE `bayarcash_api` SET `api_token` = ?, `secret_key` = ?, `portal_key` = ? ORDER BY id DESC LIMIT 1";
-        $this->execute($sql, [$apiToken, $secretKey, $portalKey]);
+        $this->execute($sql, 'sss', [$apiToken, $secretKey, $portalKey]);
     }
 
     public function updateMode($type)
     {
         $sql = "UPDATE `bayarcash_api` SET `type` = ? ORDER BY id DESC LIMIT 1";
-        $this->execute($sql, [$type]);
+        $this->execute($sql, 's', [$type]);
     }
 
     public function isSandbox()
