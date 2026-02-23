@@ -18,7 +18,8 @@ class StoreSetting extends BaseModel
 
     public function updateSetting($key, $value)
     {
-        $sql = "INSERT INTO `store_settings` (`setting_key`, `setting_value`, `updated_at`) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`), `updated_at` = NOW()";
-        return $this->execute($sql, "ss", [$key, $value]);
+        $now = dateNow();
+        $sql = "INSERT INTO `store_settings` (`setting_key`, `setting_value`, `updated_at`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`), `updated_at` = VALUES(`updated_at`)";
+        return $this->execute($sql, "sss", [$key, $value, $now]);
     }
 }

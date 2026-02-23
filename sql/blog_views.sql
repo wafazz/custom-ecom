@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS `blog_views` (
   `id` int NOT NULL AUTO_INCREMENT,
   `blog_id` int NOT NULL,
   `visitor_ip` varchar(45) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_view` (`blog_id`, `visitor_ip`),
   KEY `blog_id` (`blog_id`)

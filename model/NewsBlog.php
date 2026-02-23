@@ -46,8 +46,9 @@ class NewsBlog extends BaseModel
 
     public function addView($blogId, $ip)
     {
-        $sql = "INSERT INTO `blog_views` (`blog_id`, `visitor_ip`, `created_at`) VALUES (?, ?, NOW())";
-        $this->execute($sql, "is", [$blogId, $ip]);
+        $now = dateNow();
+        $sql = "INSERT INTO `blog_views` (`blog_id`, `visitor_ip`, `created_at`) VALUES (?, ?, ?)";
+        $this->execute($sql, "iss", [$blogId, $ip, $now]);
 
         $sqlUpdate = "UPDATE `news_blog` SET `reader` = (SELECT COUNT(*) FROM `blog_views` WHERE `blog_id` = ?) WHERE `id` = ?";
         return $this->execute($sqlUpdate, "ii", [$blogId, $blogId]);
