@@ -81,7 +81,11 @@ class CheckoutController
 
         $newArrival = newProduct(8);
 
-        $sessionid = $_SESSION["session_id"];
+        $sessionid = $_SESSION["session_id"] ?? null;
+        if (!$sessionid) {
+            header("Location: /");
+            exit;
+        }
 
         $cartItems = $this->cartModel->getActiveBySession($sessionid);
         $query = $cartItems;
@@ -141,7 +145,11 @@ class CheckoutController
 
         $newArrival = newProduct(8);
 
-        $sessionid = $_SESSION["session_id"];
+        $sessionid = $_SESSION["session_id"] ?? null;
+        if (!$sessionid) {
+            header("Location: /");
+            exit;
+        }
 
         $cartItems = $this->cartModel->getActiveBySession($sessionid);
         $query = $cartItems;
@@ -193,7 +201,11 @@ class CheckoutController
 
         $newArrival = newProduct(8);
 
-        $sessionid = $_SESSION["session_id"];
+        $sessionid = $_SESSION["session_id"] ?? null;
+        if (!$sessionid) {
+            header("Location: /");
+            exit;
+        }
 
         $cartItems = $this->cartModel->getActiveBySession($sessionid);
         $query = $cartItems;
@@ -234,7 +246,11 @@ class CheckoutController
 
     public function checkoutUpdate()
     {
-        $sessionid = $_SESSION["session_id"];
+        $sessionid = $_SESSION["session_id"] ?? null;
+        if (!$sessionid) {
+            header("Location: /");
+            exit;
+        }
         $dateNow = dateNow();
 
         if (isset($_POST['cartid']) && is_array($_POST['cartid']) && isset($_POST['quantity']) && is_array($_POST['quantity'])) {
