@@ -25,16 +25,15 @@ include "e-menu-keya88.php";
 <section class="product-details spad">
     <div class="container">
         <div class="row">
+            <?php $storeSettings = getStoreSettings(); ?>
             <div class="col-lg-12">
-                <h5>ROZZ BEAUTY LEGACY (ROZEYANA KOSMETIK)</h5>
+                <h5><?= htmlspecialchars($storeSettings['company_name'] ?? 'ROZZ BEAUTY LEGACY') ?></h5>
                 <p>
-                    A-G-30, SAVANNA LIFESTYLE RETAIL,
+                    <?= nl2br(htmlspecialchars($storeSettings['footer_address'] ?? "A-G-30, SAVANNA LIFESTYLE RETAIL,\nJALAN SOUTHVILLE 2, SOUTHVILLE CITY,\n43800 DENGKIL, SELANGOR")) ?>
                     <br>
-                    JALAN SOUTHVILLE 2, SOUTHVILLE CITY,
+                    <i class="fa-solid fa-phone"></i> <?= htmlspecialchars($storeSettings['footer_phone'] ?? '603 8912 3807') ?>
                     <br>
-                    43800 DENGKIL, SELANGOR
-                    <br>
-                    Email: <b>rozeyanacustomerservice@gmail.com</b>
+                    Email: <b><?= htmlspecialchars($storeSettings['footer_email'] ?? 'rozeyanacustomerservice@gmail.com') ?></b>
                 </p>
             </div>
 
