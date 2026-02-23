@@ -512,10 +512,18 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                 <?php endif; ?>
 
                                 <!-- Payment buttons (shown for Normal Postage) -->
+                                <?php
+                                $senangpayEnabled = ($storeSettings['senangpay_enabled'] ?? '1') == '1';
+                                $bayarcashEnabled = ($storeSettings['bayarcash_enabled'] ?? '1') == '1';
+                                ?>
                                 <div id="payment-buttons">
                                     <p>By clicking "<b>Pay Now</b>" button below, you're agree to our "PURCHASE" terms and conditions.</p>
+                                    <?php if ($senangpayEnabled): ?>
                                     <a href="<?= $domainURL ?>proceed-payment" class="site-btns">Pay Now (SenangPay)</a>
+                                    <?php endif; ?>
+                                    <?php if ($bayarcashEnabled): ?>
                                     <a href="<?= $domainURL ?>proceed-bayarcash" class="site-btns" style="background:#1a73e8; margin-top:10px;">Pay Now (Bayarcash)</a>
+                                    <?php endif; ?>
                                 </div>
 
                                 <?php if ($codEnabled): ?>

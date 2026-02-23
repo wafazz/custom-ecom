@@ -64,12 +64,24 @@ include "01-menu.php";
                             </div>
 
                             <hr>
+                            <label class="form-label fw-bold">Payment Channels</label>
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Cash on Delivery (COD)</label>
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="senangpay_enabled" name="senangpay_enabled" value="1" <?= ($storeSettings['senangpay_enabled'] ?? '1') == '1' ? 'checked' : '' ?>>
+                                        <label class="form-check-label" for="senangpay_enabled">SenangPay</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="bayarcash_enabled" name="bayarcash_enabled" value="1" <?= ($storeSettings['bayarcash_enabled'] ?? '1') == '1' ? 'checked' : '' ?>>
+                                        <label class="form-check-label" for="bayarcash_enabled">Bayarcash</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" id="cod_enabled" name="cod_enabled" value="1" <?= ($storeSettings['cod_enabled'] ?? '0') == '1' ? 'checked' : '' ?>>
-                                        <label class="form-check-label" for="cod_enabled">Enable COD at checkout</label>
+                                        <label class="form-check-label" for="cod_enabled">COD</label>
                                     </div>
                                 </div>
                             </div>

@@ -722,6 +722,12 @@ class SettingController
         $codEnabled = isset($_POST['cod_enabled']) ? '1' : '0';
         $this->storeSetting->updateSetting('cod_enabled', $codEnabled);
 
+        $senangpayEnabled = isset($_POST['senangpay_enabled']) ? '1' : '0';
+        $this->storeSetting->updateSetting('senangpay_enabled', $senangpayEnabled);
+
+        $bayarcashEnabled = isset($_POST['bayarcash_enabled']) ? '1' : '0';
+        $this->storeSetting->updateSetting('bayarcash_enabled', $bayarcashEnabled);
+
         cache_delete('store_settings:all');
 
         $_SESSION['upload_success'] = 'Store settings updated successfully.';
