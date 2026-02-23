@@ -719,6 +719,9 @@ class SettingController
             $this->storeSetting->updateSetting($key, $value);
         }
 
+        $codEnabled = isset($_POST['cod_enabled']) ? '1' : '0';
+        $this->storeSetting->updateSetting('cod_enabled', $codEnabled);
+
         cache_delete('store_settings:all');
 
         $_SESSION['upload_success'] = 'Store settings updated successfully.';

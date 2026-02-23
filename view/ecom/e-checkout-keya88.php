@@ -188,19 +188,26 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                 $subTotal = $subTotals + $postageCharge;
                                 $_SESSION["subTotal"] = $subTotal;
 
-                                // Lookup COD fee based on benchmark + shipping zone
+                                // COD toggle check
+                                $storeSettings = getStoreSettings();
+                                $codEnabled = ($storeSettings['cod_enabled'] ?? '0') == '1';
+
                                 $codFee = 0;
-                                $codFeeResult = $conn->query("SELECT * FROM `cod_charges` WHERE `country_id`='$country' AND `shipping_zone`='$shippingZone' LIMIT 1");
-                                if ($codFeeResult && $codFeeResult->num_rows > 0) {
-                                    $codFeeRow = $codFeeResult->fetch_array();
-                                    if ($subTotals < $codFeeRow["benchmark_amount"]) {
-                                        $codFee = $codFeeRow["cod_fee_below"];
-                                    } else {
-                                        $codFee = $codFeeRow["cod_fee_above"];
+                                $subTotalWithCod = $subTotal;
+                                if ($codEnabled) {
+                                    // Lookup COD fee based on benchmark + shipping zone
+                                    $codFeeResult = $conn->query("SELECT * FROM `cod_charges` WHERE `country_id`='$country' AND `shipping_zone`='$shippingZone' LIMIT 1");
+                                    if ($codFeeResult && $codFeeResult->num_rows > 0) {
+                                        $codFeeRow = $codFeeResult->fetch_array();
+                                        if ($subTotals < $codFeeRow["benchmark_amount"]) {
+                                            $codFee = $codFeeRow["cod_fee_below"];
+                                        } else {
+                                            $codFee = $codFeeRow["cod_fee_above"];
+                                        }
                                     }
+                                    $subTotalWithCod = $subTotal + $codFee;
                                 }
                                 $_SESSION["codFee"] = $codFee;
-                                $subTotalWithCod = $subTotal + $codFee;
                                 $_SESSION["subTotalWithCod"] = $subTotalWithCod;
                                 ?>
 
@@ -491,6 +498,7 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                 }
                                 ?>
 
+                                <?php if ($codEnabled): ?>
                                 <!-- Delivery Method Selection -->
                                 <p style="font-weight:bold; margin-bottom:8px;">Delivery Method</p>
                                 <div style="margin-bottom:15px;">
@@ -501,6 +509,7 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                         <input type="radio" name="delivery_method" value="cod" onchange="togglePaymentButtons()"> Cash on Delivery (COD)
                                     </label>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Payment buttons (shown for Normal Postage) -->
                                 <div id="payment-buttons">
@@ -509,12 +518,15 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                     <a href="<?= $domainURL ?>proceed-bayarcash" class="site-btns" style="background:#1a73e8; margin-top:10px;">Pay Now (Bayarcash)</a>
                                 </div>
 
+                                <?php if ($codEnabled): ?>
                                 <!-- COD button (shown for COD) -->
                                 <div id="cod-button" style="display:none;">
                                     <p>Your order will be placed and you will pay upon delivery.</p>
                                     <a href="<?= $domainURL ?>proceed-cod" class="site-btns" style="background:#28a745;">Place Order (COD)</a>
                                 </div>
+                                <?php endif; ?>
 
+                                <?php if ($codEnabled): ?>
                                 <script>
                                 var normalTotal = <?= $subTotal ?>;
                                 var codTotal = <?= $subTotalWithCod ?>;
@@ -528,6 +540,7 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                     if (totalEl) totalEl.innerText = (method === 'cod' ? codTotal : normalTotal).toFixed(2);
                                 }
                                 </script>
+                                <?php endif; ?>
 
                                 <!-- <p style="font-weight:bold;color:red;">Note: For end user please dont use SenangPay above for payment. Now we in the middle of running/conducting testing issues. End user, Please use payment below for make payment.</p> -->
                                 <!-- <p style="font-weight:bold;color:green;">Note: For FPX Payment & E-Wallet (T&G, Boost, GrabPay, ShopeePay) please use SenangPay above.</p>
