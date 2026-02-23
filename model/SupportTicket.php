@@ -60,7 +60,8 @@ class SupportTicket extends BaseModel
 
     public function closeTicket($id)
     {
-        $sql = "UPDATE cs_tickets SET status = 'closed', updated_at = NOW() WHERE id = ?";
+        $now = dateNow();
+        $sql = "UPDATE cs_tickets SET status = 'closed', updated_at = '$now' WHERE id = ?";
         return $this->execute($sql, "i", [$id]);
     }
 }
