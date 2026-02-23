@@ -14,6 +14,8 @@ require_once __DIR__ . '/../../model/StripeSetting.php';
 require_once __DIR__ . '/../../model/StateSetting.php';
 require_once __DIR__ . '/../../model/PostageCost.php';
 require_once __DIR__ . '/../../model/BayarcashTransaction.php';
+require_once __DIR__ . '/../../lib/gateway/BayarcashGateway.php';
+require_once __DIR__ . '/../../lib/gateway/SenangPayGateway.php';
 
 require __DIR__ . '/../../vendor/autoload.php';
 
@@ -444,9 +446,7 @@ class CheckoutController
         }
 
         $credentials = $this->senangPayModel->getCredentials();
-        $merchant_id = $credentials['merchant_id'];
-        $secret_key  = $credentials['secret_key'];
-        $urlsubmit   = $credentials['url'];
+        $senangPay = new \SenangPayGateway($credentials['merchant_id'], $credentials['secret_key'], $credentials['type'] === 'sandbox');
 
         $cartItems = $this->cartModel->getActiveBySession($_SESSION["session_id"]);
 
@@ -476,19 +476,9 @@ class CheckoutController
             $email    = $_SESSION["oemail"];
             $phone    = $_SESSION["ophone"];
 
-            $hash = hash_hmac('sha256', $secret_key . urldecode($detail) . urldecode($amount) . urldecode($order_id), $secret_key);
+            $postData = $senangPay->buildPaymentData($detail, $amount, $order_id, $name, $email, $phone);
+            $payment_url = $senangPay->getPaymentUrl();
 
-            $postData = [
-                'detail'   => $detail,
-                'amount'   => $amount,
-                'order_id' => $order_id,
-                'name'     => $name,
-                'email'    => $email,
-                'phone'    => $phone,
-                'hash'     => $hash
-            ];
-
-            $payment_url = $urlsubmit . "payment/$merchant_id";
             unset($_SESSION["session_id"]);
             ?>
                 <html>
@@ -497,13 +487,9 @@ class CheckoutController
                     </head>
                     <body onload="document.order.submit()"></body>
                         <form name="order" method="post" action="<?php echo $payment_url; ?>">
-                            <input type="hidden" name="detail" value="<?php echo $detail; ?>">
-                            <input type="hidden" name="amount" value="<?php echo $amount; ?>">
-                            <input type="hidden" name="order_id" value="<?php echo $order_id; ?>">
-                            <input type="hidden" name="name" value="<?php echo $name; ?>">
-                            <input type="hidden" name="email" value="<?php echo $email; ?>">
-                            <input type="hidden" name="phone" value="<?php echo $phone; ?>">
-                            <input type="hidden" name="hash" value="<?php echo $hash; ?>">
+                            <?php foreach ($postData as $field => $value): ?>
+                            <input type="hidden" name="<?php echo $field; ?>" value="<?php echo $value; ?>">
+                            <?php endforeach; ?>
                         </form>
                     </body>
                 </html>
@@ -516,27 +502,19 @@ class CheckoutController
         $dateNow = dateNow();
         $domainURL = getMainUrl();
 
-        $status_id = $_POST['status_id'] ?? '';
-        $order_id = $_POST['order_id'] ?? '';
-        $transaction_id = $_POST['transaction_id'] ?? '';
-        $msg = $_POST['msg'] ?? '';
-        $hash = $_POST['hash'] ?? '';
-        $payment_type = $_POST['payment_type'] ?? '';
+        $credentials = $this->senangPayModel->getCredentials();
+        $senangPay = new \SenangPayGateway($credentials['merchant_id'], $credentials['secret_key'], $credentials['type'] === 'sandbox');
 
-        $settings = $this->senangPayModel->getSettings();
-        if ($settings["type"] == 'sandbox') {
-            $secret_key = $settings["secret_key"];
-        } else {
-            $secret_key = $settings["pro_secret_key"];
-        }
-
-        $computed_hash = hash_hmac('sha256', $secret_key . urldecode($status_id) . urldecode($order_id) . urldecode($transaction_id) . urldecode($msg), $secret_key);
-
-        if ($computed_hash != urldecode($hash)) {
+        if (!$senangPay->verifyFromPost($_POST)) {
             http_response_code(400);
             echo "INVALID HASH";
             return;
         }
+
+        $status_id = $_POST['status_id'] ?? '';
+        $order_id = $_POST['order_id'] ?? '';
+        $transaction_id = $_POST['transaction_id'] ?? '';
+        $payment_type = $_POST['payment_type'] ?? '';
 
         $order_ids = str_replace('ORDERID_', '', $order_id);
         $dataOrder = getOrder(1, $order_ids);
@@ -580,12 +558,10 @@ class CheckoutController
             exit();
         }
 
-        $settings = $this->senangPayModel->getSettings();
-        $secret_key = ($settings["type"] == 'sandbox') ? $settings["secret_key"] : $settings["pro_secret_key"];
+        $credentials = $this->senangPayModel->getCredentials();
+        $senangPay = new \SenangPayGateway($credentials['merchant_id'], $credentials['secret_key'], $credentials['type'] === 'sandbox');
 
-        $computed_hash = hash_hmac('sha256', $secret_key . urldecode($_GET['status_id']) . urldecode($_GET['order_id']) . urldecode($_GET['transaction_id']) . urldecode($_GET['msg']), $secret_key);
-
-        if ($computed_hash != urldecode($_GET['hash'])) {
+        if (!$senangPay->verifyFromGet($_GET)) {
             header("Location: /");
             exit();
         }
@@ -646,8 +622,12 @@ class CheckoutController
             $email = $_SESSION["oemail"];
             $phone = $_SESSION["ophone"];
 
-            $bayarcash = new \Bayarcash();
-            $bayarcash->loadConfig();
+            $bcSettings = (new \Bayarcash($this->conn))->getSettings();
+            $isBcSandbox = ($bcSettings['type'] ?? '') === 'sandbox';
+            $bcToken = $isBcSandbox ? $bcSettings['sandbox_api_token'] : $bcSettings['api_token'];
+            $bcSecret = $isBcSandbox ? $bcSettings['sandbox_secret_key'] : $bcSettings['secret_key'];
+            $bcPortal = $isBcSandbox ? $bcSettings['sandbox_portal_key'] : $bcSettings['portal_key'];
+            $bayarcash = new \BayarcashGateway($bcToken, $bcSecret, $bcPortal, $isBcSandbox);
 
             $callbackUrl = $domainURL . 'bayarcash-callback';
             $returnUrl = $domainURL . 'bayarcash-thank-you?order_id=' . $orderNumber;
@@ -683,8 +663,12 @@ class CheckoutController
         $dateNow = dateNow();
         $domainURL = getMainUrl();
 
-        $bayarcash = new \Bayarcash();
-        $bayarcash->loadConfig();
+        $bcSettings = (new \Bayarcash($this->conn))->getSettings();
+        $isBcSandbox = ($bcSettings['type'] ?? '') === 'sandbox';
+        $bcToken = $isBcSandbox ? $bcSettings['sandbox_api_token'] : $bcSettings['api_token'];
+        $bcSecret = $isBcSandbox ? $bcSettings['sandbox_secret_key'] : $bcSettings['secret_key'];
+        $bcPortal = $isBcSandbox ? $bcSettings['sandbox_portal_key'] : $bcSettings['portal_key'];
+        $bayarcash = new \BayarcashGateway($bcToken, $bcSecret, $bcPortal, $isBcSandbox);
 
         $result = $bayarcash->processCallback($_POST);
 
