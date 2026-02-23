@@ -214,6 +214,7 @@ $routes = [
         '/senangpay-callback' => 'Ecom\checkoutController@callBackSenangPay',
         '/bayarcash-callback' => 'Ecom\checkoutController@callBackBayarcash',
         '/update-checkout' => 'Ecom\checkoutController@checkoutUpdate',
+        '/blog-view' => 'Ecom\ecomController@blogView',
         '/customer/support-ticket' => 'Ecom\supportController@submittedTicket',
         '/customer/ticket-details' => 'Ecom\supportController@submittedReplyTicket',
 

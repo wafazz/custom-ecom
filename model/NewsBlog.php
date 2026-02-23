@@ -37,6 +37,22 @@ class NewsBlog extends BaseModel
         return $this->execute($sql, "sssi", [$updateBy, $dateNow, $dateNow, $id]);
     }
 
+    public function hasViewed($blogId, $ip)
+    {
+        $sql = "SELECT `id` FROM `blog_views` WHERE `blog_id` = ? AND `visitor_ip` = ? LIMIT 1";
+        $rows = $this->query($sql, "is", [$blogId, $ip]);
+        return !empty($rows);
+    }
+
+    public function addView($blogId, $ip)
+    {
+        $sql = "INSERT INTO `blog_views` (`blog_id`, `visitor_ip`, `created_at`) VALUES (?, ?, NOW())";
+        $this->execute($sql, "is", [$blogId, $ip]);
+
+        $sqlUpdate = "UPDATE `news_blog` SET `reader` = (SELECT COUNT(*) FROM `blog_views` WHERE `blog_id` = ?) WHERE `id` = ?";
+        return $this->execute($sqlUpdate, "ii", [$blogId, $blogId]);
+    }
+
     public function getPaginated($limit, $offset)
     {
         $sql = "SELECT `id`, `post_by`, `update_by`, `title`, `contents`, `created_at`, `updated_at`, `deleted_at`, `reader` FROM `news_blog` WHERE `deleted_at` IS NULL ORDER BY `created_at` DESC LIMIT ? OFFSET ?";

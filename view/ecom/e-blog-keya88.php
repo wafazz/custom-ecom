@@ -53,6 +53,7 @@ include "e-menu-keya88.php";
                             <button
                                 type="button"
                                 class="btn-show-more"
+                                data-id="<?= $row['id'] ?>"
                                 data-title="<?= htmlspecialchars($row['title'], ENT_QUOTES) ?>"
                                 data-content="<?= htmlspecialchars($fullContent, ENT_QUOTES) ?>"
                                 style="background:none;border:none;color:#007bff;padding:0;cursor:pointer;">
@@ -63,7 +64,7 @@ include "e-menu-keya88.php";
 
                             <small>
                                 <?= date('d M Y', strtotime($row['created_at'])) ?> |
-                                👁 <?= (int)$row['reader'] ?>
+                                👁 <span class="blog-reader-count"><?= (int)$row['reader'] ?></span>
                             </small>
 
                         </div>
@@ -139,13 +140,25 @@ include "e-menu-keya88.php";
 <script>
     document.querySelectorAll('.btn-show-more').forEach(function(btn) {
         btn.addEventListener('click', function() {
+            var id = this.getAttribute('data-id');
             var title = this.getAttribute('data-title');
             var content = this.getAttribute('data-content');
+            var counterEl = this.closest('.col-lg-4, .col-md-6, .col-sm-12').querySelector('.blog-reader-count');
 
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalContent').innerHTML = content;
             document.getElementById('blogModal').style.display = 'block';
             document.body.style.overflow = 'hidden';
+
+            fetch('<?= $domainURL ?>blog-view', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'id=' + id
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                if (data.status === 'ok' && counterEl) {
+                    counterEl.textContent = parseInt(counterEl.textContent) + 1;
+                }
+            }).catch(function() {});
         });
     });
 

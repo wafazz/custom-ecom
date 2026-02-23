@@ -366,6 +366,27 @@ class ecomController
         require_once __DIR__ . '/../../view/ecom/e-blog-keya88.php';
     }
 
+    public function blogView()
+    {
+        header('Content-Type: application/json');
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id < 1) {
+            echo json_encode(['status' => 'error']);
+            return;
+        }
+
+        $ip = getUserIP();
+
+        if ($this->newsBlogModel->hasViewed($id, $ip)) {
+            echo json_encode(['status' => 'already']);
+            return;
+        }
+
+        $this->newsBlogModel->addView($id, $ip);
+        echo json_encode(['status' => 'ok']);
+    }
+
     public function trackOrder()
     {
         if (isset($_COOKIE['country'])) {
