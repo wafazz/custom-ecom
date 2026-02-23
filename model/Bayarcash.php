@@ -7,10 +7,10 @@ class Bayarcash extends BaseModel
     protected $table = 'bayarcash_api';
 
     public const CHANNEL_FPX = 1;
-    public const CHANNEL_DUITNOW_QR = 2;
-    public const CHANNEL_DUITNOW_ONLINE = 3;
-    public const CHANNEL_CREDIT_CARD = 4;
-    public const CHANNEL_SPAYLATER = 5;
+    public const CHANNEL_DUITNOW_ONLINE = 5;
+    public const CHANNEL_DUITNOW_QR = 6;
+    public const CHANNEL_SPAYLATER = 7;
+    public const CHANNEL_CREDIT_CARD = 12;
 
     public const STATUS_NEW = 0;
     public const STATUS_PENDING = 1;
@@ -22,7 +22,7 @@ class Bayarcash extends BaseModel
     private $secretKey = null;
     private $portalKey = null;
     private $sandbox = false;
-    private $baseUrl = 'https://console.bayar.cash/api';
+    private $baseUrl = 'https://api.console.bayar.cash/v3';
 
     public function loadConfig()
     {
@@ -34,11 +34,13 @@ class Bayarcash extends BaseModel
             $this->secretKey = $row['sandbox_secret_key'];
             $this->portalKey = $row['sandbox_portal_key'];
             $this->sandbox = true;
+            $this->baseUrl = 'https://api.console.bayarcash-sandbox.com/v3';
         } else {
             $this->apiToken = $row['api_token'];
             $this->secretKey = $row['secret_key'];
             $this->portalKey = $row['portal_key'];
             $this->sandbox = false;
+            $this->baseUrl = 'https://api.console.bayar.cash/v3';
         }
 
         return true;
@@ -95,23 +97,23 @@ class Bayarcash extends BaseModel
 
         $data['checksum'] = $this->generateChecksum($data);
 
-        $response = $this->apiRequest('POST', '/v3/payment-intents', $data);
+        $response = $this->apiRequest('POST', '/payment-intents', $data);
         return $response;
     }
 
     public function getPaymentIntent($paymentIntentId)
     {
-        return $this->apiRequest('GET', '/v3/payment-intents/' . $paymentIntentId);
+        return $this->apiRequest('GET', '/payment-intents/' . $paymentIntentId);
     }
 
     public function getTransactionByOrderNumber($orderNumber)
     {
-        return $this->apiRequest('GET', '/v3/transactions', ['order_number' => $orderNumber]);
+        return $this->apiRequest('GET', '/transactions', ['order_number' => $orderNumber]);
     }
 
     public function getTransactionByRef($refNumber)
     {
-        return $this->apiRequest('GET', '/v3/transactions', ['reference_number' => $refNumber]);
+        return $this->apiRequest('GET', '/transactions', ['reference_number' => $refNumber]);
     }
 
     public function verifyCallbackChecksum($callbackData)
@@ -164,10 +166,7 @@ class Bayarcash extends BaseModel
     private function generateChecksum($data)
     {
         ksort($data);
-        $payload = '';
-        foreach ($data as $val) {
-            $payload .= $val;
-        }
+        $payload = implode('|', $data);
         return hash_hmac('sha256', $payload, $this->secretKey);
     }
 
