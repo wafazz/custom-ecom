@@ -106,6 +106,7 @@ $routes = [
         '/logo-setting' => 'Setting\SettingController@imageSetting',
         '/slider-setting' => 'Setting\SettingController@sliderSetting',
         '/set-logo' => 'Setting\SettingController@setLogo',
+        '/store-setting' => 'Setting\SettingController@storeSetting',
 
         //Announcement Blog
         '/announcement-blog' => 'Setting\SettingController@indexAnnouncement',
@@ -200,6 +201,7 @@ $routes = [
         '/poslaju-setting' => 'Setting\SettingController@savePosLaju',
         '/my-pass' => 'Setting\SettingController@savePassword',
         '/logo-setting' => 'Setting\SettingController@uploadImages',
+        '/store-setting' => 'Setting\SettingController@saveStoreSetting',
         '/slider-setting' => 'Setting\SettingController@uploadSlider',
 
         //Announcement Blog

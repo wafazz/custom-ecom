@@ -2252,3 +2252,18 @@ function invalidateCache_cart($sessionId = null)
         cache_flush('cart:qty:');
     }
 }
+
+function getStoreSettings()
+{
+    return cache_remember('store_settings:all', 600, function () {
+        $conn = getDbConnection();
+        $result = $conn->query("SELECT `setting_key`, `setting_value` FROM `store_settings`");
+        $settings = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $settings[$row['setting_key']] = $row['setting_value'];
+            }
+        }
+        return $settings;
+    });
+}

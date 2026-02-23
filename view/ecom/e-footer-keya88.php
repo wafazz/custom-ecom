@@ -1,3 +1,4 @@
+<?php $storeSettings = getStoreSettings(); ?>
 <!-- Footer Section Begin -->
 <footer class="footer" style="background: ghostwhite;">
     <div class="container">
@@ -5,14 +6,12 @@
             <div class="col-lg-4 col-md-4 col-sm-12">
                 <div class="footer__about">
                     <div class="footer__logo">
-                        <a href="./index.html"><img src="<?= $domainURL ?>assets/images/LOGO-ROZYANA-06-2.png"
+                        <a href="<?= $domainURL ?>main"><img src="<?= $domainURL ?><?= !empty($rowLogo["image_path"]) ? $rowLogo["image_path"] : 'assets/images/LOGO-ROZYANA-06-2.png' ?>"
                                 alt=""></a>
                     </div>
-                    <p>A-G-30, SAVANNA LIFESTYLE RETAIL,<br>
-                        JALAN SOUTHVILLE 2, SOUTHVILLE CITY,<br>
-                        43800 DENGKIL, SELANGOR</p>
+                    <p><?= nl2br(htmlspecialchars($storeSettings['footer_address'] ?? "A-G-30, SAVANNA LIFESTYLE RETAIL,\nJALAN SOUTHVILLE 2, SOUTHVILLE CITY,\n43800 DENGKIL, SELANGOR")) ?></p>
                     <p>
-                        <i class="fa-solid fa-phone"></i> 603 8912 3807
+                        <i class="fa-solid fa-phone"></i> <?= htmlspecialchars($storeSettings['footer_phone'] ?? '603 8912 3807') ?>
                     </p>
                     <div class="footer__payment">
                         <a href="#"><img src="<?= $domainURL ?>assets/ecom/img/payment/payment-1.png" alt=""></a>
@@ -54,7 +53,7 @@
                         <script>
                             document.write(new Date().getFullYear());
                         </script> All rights reserved | <a
-                            href="https://rozyana.com">Rozyana.com</a>
+                            href="<?= htmlspecialchars($storeSettings['footer_copyright_url'] ?? 'https://rozyana.com') ?>"><?= htmlspecialchars($storeSettings['footer_copyright_text'] ?? 'Rozyana.com') ?></a>
                     </p>
                 </div>
                 <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->

@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../model/CodCharge.php';
 require_once __DIR__ . '/../../model/NewsBlog.php';
 require_once __DIR__ . '/../../model/ImageSetting.php';
 require_once __DIR__ . '/../../model/MemberHq.php';
+require_once __DIR__ . '/../../model/StoreSetting.php';
 
 class SettingController
 {
@@ -28,6 +29,7 @@ class SettingController
     private $newsBlog;
     private $imageSetting;
     private $memberHq;
+    private $storeSetting;
 
     public function __construct()
     {
@@ -51,6 +53,7 @@ class SettingController
         $this->newsBlog       = new \NewsBlog($this->conn);
         $this->imageSetting   = new \ImageSetting($this->conn);
         $this->memberHq       = new \MemberHq($this->conn);
+        $this->storeSetting   = new \StoreSetting($this->conn);
     }
 
     private function checkAccess($segment = null)
@@ -685,6 +688,41 @@ class SettingController
         }
 
         header("Location: {$this->domainURL}logo-setting");
+        exit;
+    }
+
+    public function storeSetting()
+    {
+        $this->checkAccess();
+
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
+
+        $pageName = "Store Setting";
+        $storeSettings = $this->storeSetting->getAll();
+
+        require_once __DIR__ . '/../../view/Admin/store-setting.php';
+    }
+
+    public function saveStoreSetting()
+    {
+        $this->checkAccess('store-setting');
+
+        $keys = ['footer_address', 'footer_phone', 'footer_copyright_text', 'footer_copyright_url'];
+        foreach ($keys as $key) {
+            $value = $_POST[$key] ?? '';
+            $this->storeSetting->updateSetting($key, $value);
+        }
+
+        cache_delete('store_settings:all');
+
+        $_SESSION['upload_success'] = 'Store settings updated successfully.';
+        header("Location: {$this->domainURL}store-setting");
         exit;
     }
 
