@@ -9,6 +9,7 @@
                         <a href="<?= $domainURL ?>main"><img src="<?= $domainURL ?><?= !empty($rowLogo["image_path"]) ? $rowLogo["image_path"] : 'assets/images/LOGO-ROZYANA-06-2.png' ?>"
                                 alt=""></a>
                     </div>
+                    <h6><?= htmlspecialchars($storeSettings['company_name'] ?? 'ROZZ BEAUTY LEGACY') ?></h6>
                     <p><?= nl2br(htmlspecialchars($storeSettings['footer_address'] ?? "A-G-30, SAVANNA LIFESTYLE RETAIL,\nJALAN SOUTHVILLE 2, SOUTHVILLE CITY,\n43800 DENGKIL, SELANGOR")) ?></p>
                     <p>
                         <i class="fa-solid fa-phone"></i> <?= htmlspecialchars($storeSettings['footer_phone'] ?? '603 8912 3807') ?>
