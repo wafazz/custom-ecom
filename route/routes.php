@@ -94,6 +94,7 @@ $routes = [
 
         //setting
         '/dhl-setting' => 'Setting\DhlController@index',
+        '/senangpay-setting' => 'Setting\SenangPayController@index',
         '/setting-policy' => 'Setting\SettingController@policy',
         '/setting-terms' => 'Setting\SettingController@terms',
         '/setting-about-us' => 'Setting\SettingController@aboutUs',
@@ -189,6 +190,7 @@ $routes = [
 
         //setting
         '/dhl-setting' => 'Setting\DhlController@saveDHL',
+        '/senangpay-setting' => 'Setting\SenangPayController@saveSenangPay',
         '/setting-policy' => 'Setting\SettingController@updatePolicy',
         '/setting-terms' => 'Setting\SettingController@updateTerms',
         '/setting-about-us' => 'Setting\SettingController@updateAboutUs',

@@ -13,6 +13,24 @@ class SenangPaySetting extends BaseModel
         return $rows[0] ?? null;
     }
 
+    public function updateSandbox($merchantId, $secretKey)
+    {
+        $sql = "UPDATE `senangpay_api` SET `merchant_id` = ?, `secret_key` = ? ORDER BY id DESC LIMIT 1";
+        $this->execute($sql, [$merchantId, $secretKey]);
+    }
+
+    public function updateProduction($merchantId, $secretKey)
+    {
+        $sql = "UPDATE `senangpay_api` SET `pro_merchant_id` = ?, `pro_secret_key` = ? ORDER BY id DESC LIMIT 1";
+        $this->execute($sql, [$merchantId, $secretKey]);
+    }
+
+    public function updateMode($type)
+    {
+        $sql = "UPDATE `senangpay_api` SET `type` = ? ORDER BY id DESC LIMIT 1";
+        $this->execute($sql, [$type]);
+    }
+
     public function getCredentials()
     {
         $row = $this->getSettings();
