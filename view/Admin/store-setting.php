@@ -55,6 +55,14 @@ include "01-menu.php";
                                 </div>
                             </div>
 
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="google_maps_embed" class="form-label">Google Maps Embed URL</label>
+                                    <input type="text" class="form-control" id="google_maps_embed" name="google_maps_embed" value="<?= htmlspecialchars($storeSettings['google_maps_embed'] ?? '') ?>" placeholder="https://www.google.com/maps/embed?pb=...">
+                                    <small class="text-muted">Paste the src URL from Google Maps embed iframe</small>
+                                </div>
+                            </div>
+
                             <input type="submit" class="btn btn-primary w-100" value="Update & Save">
                         </form>
                     </div>
