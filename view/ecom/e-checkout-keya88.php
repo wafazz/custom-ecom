@@ -528,9 +528,6 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                 ?>
                                 <div id="payment-buttons">
                                     <p>By clicking "<b>Pay Now</b>" button below, you're agree to our "PURCHASE" terms and conditions.</p>
-                                    <?php if ($senangpayEnabled): ?>
-                                    <a href="<?= $domainURL ?>proceed-payment" class="site-btns">Pay Now (SenangPay)</a>
-                                    <?php endif; ?>
                                     <?php if ($bayarcashEnabled): ?>
                                     <div style="margin-top:10px;">
                                         <select id="bayarcash-channel" class="form-control" style="margin-bottom:8px;">

@@ -68,12 +68,6 @@ include "01-menu.php";
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="senangpay_enabled" name="senangpay_enabled" value="1" <?= ($storeSettings['senangpay_enabled'] ?? '1') == '1' ? 'checked' : '' ?>>
-                                        <label class="form-check-label" for="senangpay_enabled">SenangPay</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" id="bayarcash_enabled" name="bayarcash_enabled" value="1" <?= ($storeSettings['bayarcash_enabled'] ?? '1') == '1' ? 'checked' : '' ?>>
                                         <label class="form-check-label" for="bayarcash_enabled">Bayarcash</label>
                                     </div>
