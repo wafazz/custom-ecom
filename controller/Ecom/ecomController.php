@@ -9,6 +9,7 @@ require_once __DIR__ . '/../../model/NewsBlog.php';
 require_once __DIR__ . '/../../model/OrderDetail.php';
 require_once __DIR__ . '/../../model/Order.php';
 require_once __DIR__ . '/../../model/Cart.php';
+require_once __DIR__ . '/../../model/Slider.php';
 
 class ecomController
 {
@@ -19,6 +20,7 @@ class ecomController
     private $orderDetailModel;
     private $orderModel;
     private $cartModel;
+    private $sliderModel;
 
     public function __construct()
     {
@@ -29,6 +31,7 @@ class ecomController
         $this->orderDetailModel = new \OrderDetail($this->conn);
         $this->orderModel = new \Order($this->conn);
         $this->cartModel = new \Cart($this->conn);
+        $this->sliderModel = new \Slider($this->conn);
     }
 
     public function index()
@@ -54,6 +57,7 @@ class ecomController
         $categories3 = getListCategoryBrand2(2);
 
         $newArrival = newProduct(8);
+        $sliders = $this->sliderModel->getActive();
 
         require_once __DIR__ . '/../../view/ecom/e-main-keya88.php';
     }

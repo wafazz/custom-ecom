@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../model/NewsBlog.php';
 require_once __DIR__ . '/../../model/ImageSetting.php';
 require_once __DIR__ . '/../../model/MemberHq.php';
 require_once __DIR__ . '/../../model/StoreSetting.php';
+require_once __DIR__ . '/../../model/Slider.php';
 
 class SettingController
 {
@@ -30,6 +31,7 @@ class SettingController
     private $imageSetting;
     private $memberHq;
     private $storeSetting;
+    private $slider;
 
     public function __construct()
     {
@@ -54,6 +56,7 @@ class SettingController
         $this->imageSetting   = new \ImageSetting($this->conn);
         $this->memberHq       = new \MemberHq($this->conn);
         $this->storeSetting   = new \StoreSetting($this->conn);
+        $this->slider         = new \Slider($this->conn);
     }
 
     private function checkAccess($segment = null)
@@ -778,5 +781,128 @@ class SettingController
                 }
             }
         }
+    }
+
+    public function sliderSetting()
+    {
+        $this->checkAccess('slider-setting');
+
+        $domainURL   = $this->domainURL;
+        $mainDomain  = $this->mainDomain;
+        $conn        = $this->conn;
+        $options     = $this->options;
+        $country     = $this->country;
+        $currentYear = $this->currentYear;
+        $dateNow     = $this->dateNow;
+
+        $pageName = "Slider Setting";
+        $sliders = $this->slider->getAll();
+
+        require_once __DIR__ . '/../../view/Admin/slider-setting.php';
+    }
+
+    public function uploadSlider()
+    {
+        $this->checkAccess('slider-setting');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: {$this->domainURL}slider-setting");
+            exit;
+        }
+
+        $action = $_POST['action'] ?? '';
+
+        if ($action === 'upload' && isset($_FILES['slider_image'])) {
+            $uploadDir = "assets/images/sliders/";
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+
+            $tmpName = $_FILES['slider_image']['tmp_name'];
+            if (!empty($tmpName)) {
+                $ext = strtolower(pathinfo($_FILES['slider_image']['name'], PATHINFO_EXTENSION));
+                $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+                if (!in_array($ext, $allowed)) {
+                    $_SESSION['upload_error'] = "Invalid file type. Allowed: jpg, jpeg, png, webp, gif.";
+                    header("Location: {$this->domainURL}slider-setting");
+                    exit;
+                }
+
+                $fileName = 'slider_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
+                $targetPath = $uploadDir . $fileName;
+
+                if (move_uploaded_file($tmpName, $targetPath)) {
+                    $maxSort = 0;
+                    $existing = $this->slider->getAll();
+                    foreach ($existing as $s) {
+                        if ($s['sort_order'] > $maxSort) $maxSort = $s['sort_order'];
+                    }
+
+                    $this->slider->create([
+                        'title'      => trim($_POST['title'] ?? ''),
+                        'link_url'   => trim($_POST['link_url'] ?? ''),
+                        'image'      => $targetPath,
+                        'sort_order' => $maxSort + 1,
+                        'status'     => 1,
+                        'created_at' => dateNow(),
+                        'updated_at' => dateNow(),
+                    ]);
+                    $_SESSION['upload_success'] = "Slider uploaded successfully.";
+                } else {
+                    $_SESSION['upload_error'] = "Failed to upload slider image.";
+                }
+            }
+        } elseif ($action === 'delete') {
+            $id = intval($_POST['slider_id'] ?? 0);
+            if ($id > 0) {
+                $this->slider->deleteSlider($id);
+                $_SESSION['upload_success'] = "Slider deleted successfully.";
+            }
+        } elseif ($action === 'toggle') {
+            $id = intval($_POST['slider_id'] ?? 0);
+            $status = intval($_POST['status'] ?? 0);
+            if ($id > 0) {
+                $this->slider->toggleStatus($id, $status);
+                $_SESSION['upload_success'] = "Slider status updated.";
+            }
+        } elseif ($action === 'reorder') {
+            $order = $_POST['order'] ?? [];
+            foreach ($order as $position => $id) {
+                $this->slider->updateSortOrder(intval($id), intval($position));
+            }
+            $_SESSION['upload_success'] = "Slider order updated.";
+        } elseif ($action === 'update') {
+            $id = intval($_POST['slider_id'] ?? 0);
+            if ($id > 0) {
+                $data = [
+                    'title'      => trim($_POST['title'] ?? ''),
+                    'link_url'   => trim($_POST['link_url'] ?? ''),
+                    'updated_at' => dateNow(),
+                ];
+
+                if (isset($_FILES['slider_image']) && !empty($_FILES['slider_image']['tmp_name'])) {
+                    $uploadDir = "assets/images/sliders/";
+                    $ext = strtolower(pathinfo($_FILES['slider_image']['name'], PATHINFO_EXTENSION));
+                    $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+                    if (in_array($ext, $allowed)) {
+                        $fileName = 'slider_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
+                        $targetPath = $uploadDir . $fileName;
+                        if (move_uploaded_file($_FILES['slider_image']['tmp_name'], $targetPath)) {
+                            $old = $this->slider->find($id);
+                            if ($old && file_exists($old['image'])) {
+                                unlink($old['image']);
+                            }
+                            $data['image'] = $targetPath;
+                        }
+                    }
+                }
+
+                $this->slider->update($id, $data);
+                $_SESSION['upload_success'] = "Slider updated successfully.";
+            }
+        }
+
+        header("Location: {$this->domainURL}slider-setting");
+        exit;
     }
 }

@@ -61,50 +61,29 @@ include "e-menu-keya88.php";
 </style>
 
 <!-- Full Width Responsive Slider Begin -->
-<!-- <section class="fullwidth-slider">
+<?php if (!empty($sliders)): ?>
+<section class="fullwidth-slider">
     <div class="container-fluid px-0">
         <div class="owl-carousel owl-theme full-slider">
-            <div class="item">
-                <img src="<?= $domainURL ?>assets/ecom/img/banner/banner-slide1.webp" class="img-fluid w-100" alt="Slide 1">
-                <div class="progress-bar"></div>
-            </div>
-            <div class="item">
-                <img src="<?= $domainURL ?>assets/ecom/img/banner/banner-slide2.webp" class="img-fluid w-100" alt="Slide 2">
-                <div class="progress-bar"></div>
-            </div>
-            <div class="item">
-                <img src="<?= $domainURL ?>assets/ecom/img/banner/banner-slide3.webp" class="img-fluid w-100" alt="Slide 3">
-                <div class="progress-bar"></div>
-            </div>
+            <?php foreach ($sliders as $slide): ?>
+                <div class="item">
+                    <?php if (!empty($slide['link_url'])): ?>
+                        <a href="<?= htmlspecialchars($slide['link_url']) ?>">
+                            <img src="<?= $domainURL . $slide['image'] ?>" class="img-fluid w-100" alt="<?= htmlspecialchars($slide['title'] ?? '') ?>">
+                        </a>
+                    <?php else: ?>
+                        <img src="<?= $domainURL . $slide['image'] ?>" class="img-fluid w-100" alt="<?= htmlspecialchars($slide['title'] ?? '') ?>">
+                    <?php endif; ?>
+                    <div class="progress-bar"></div>
+                </div>
+            <?php endforeach; ?>
         </div>
     </div>
-</section> -->
-<!-- <section class="fullwidth-slider">
-    <div class="container-fluid px-0">
-        <div class="owl-carousel owl-theme full-slider">
-            <div class="item">
-                <div class="slide-container">
-                    <img src="<?= $domainURL ?>assets/ecom/img/banner/slider1.webp" class="img-fluid w-100" alt="Slide 1">
-                    <div class="progress-bar"></div>
-                </div>
-            </div>
-            <div class="item">
-                <div class="slide-container">
-                    <img src="<?= $domainURL ?>assets/ecom/img/banner/slider2.webp" class="img-fluid w-100" alt="Slide 2">
-                    <div class="progress-bar"></div>
-                </div>
-            </div>
-            <div class="item">
-                <div class="slide-container">
-                    <img src="<?= $domainURL ?>assets/ecom/img/banner/slider3.webp" class="img-fluid w-100" alt="Slide 3">
-                    <div class="progress-bar"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section> -->
+</section>
+<?php endif; ?>
 <!-- Full Width Responsive Slider End -->
 
+<?php if (!empty($sliders)): ?>
 <script>
     $(document).ready(function() {
         const animationsIn = ['fadeIn'];
@@ -116,11 +95,11 @@ include "e-menu-keya88.php";
             items: 1,
             loop: true,
             autoplay: true,
-            autoplayTimeout: 6000, // Set to 6s
+            autoplayTimeout: 6000,
             dots: false,
             nav: false,
-            animateIn: 'fadeIn', // Placeholder
-            animateOut: 'fadeOut', // Placeholder
+            animateIn: 'fadeIn',
+            animateOut: 'fadeOut',
             smartSpeed: 700
         });
 
@@ -137,6 +116,7 @@ include "e-menu-keya88.php";
         });
     });
 </script>
+<?php endif; ?>
 
 <!-- Swiper CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
