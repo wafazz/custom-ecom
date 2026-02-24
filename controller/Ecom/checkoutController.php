@@ -646,12 +646,15 @@ class CheckoutController
             ]);
 
             $redirectUrl = $bayarcash->getRedirectUrl($intent);
-            unset($_SESSION["session_id"]);
 
             if ($redirectUrl) {
+                unset($_SESSION["session_id"]);
                 header("Location: " . $redirectUrl);
                 exit();
             } else {
+                $apiError = $intent['error'] ?? $intent['message'] ?? 'Unknown error';
+                error_log("Bayarcash API error for order {$orderNumber}: {$apiError}");
+                $_SESSION['checkout_error'] = "Payment gateway error. Please try again.";
                 header("Location: " . $domainURL . "checkout");
                 exit();
             }
