@@ -32,9 +32,9 @@ class BayarcashGateway
 
     public function __construct($apiToken, $secretKey, $portalKey, $sandbox = false)
     {
-        $this->apiToken = $apiToken;
-        $this->secretKey = $secretKey;
-        $this->portalKey = $portalKey;
+        $this->apiToken = trim($apiToken);
+        $this->secretKey = trim($secretKey);
+        $this->portalKey = trim($portalKey);
         $this->sandbox = $sandbox;
         $this->baseUrl = $sandbox
             ? 'https://api.console.bayarcash-sandbox.com/v3'
@@ -55,14 +55,23 @@ class BayarcashGateway
             'payment_channel'        => $channel,
         ];
 
+        $paymentChannel = $data['payment_channel'];
+        $paymentChannel = is_array($paymentChannel) ? $paymentChannel : [$paymentChannel];
+        $paymentChannel = implode(',', $paymentChannel);
+
         $checksumData = [
             'amount'          => $data['amount'],
             'order_number'    => $data['order_number'],
             'payer_email'     => $data['payer_email'],
             'payer_name'      => $data['payer_name'],
-            'payment_channel' => $data['payment_channel'],
+            'payment_channel' => $paymentChannel,
         ];
-        $data['checksum'] = $this->generateChecksum($checksumData);
+
+        ksort($checksumData);
+        $payloadString = implode('|', $checksumData);
+        $data['checksum'] = hash_hmac('sha256', $payloadString, $this->secretKey);
+
+        error_log("Bayarcash checksum debug: payload=[{$payloadString}] secret_start=[" . substr($this->secretKey, 0, 4) . "...] checksum=[{$data['checksum']}]");
 
         return $this->apiRequest('POST', '/payment-intents', $data);
     }
