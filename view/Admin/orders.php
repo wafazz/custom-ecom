@@ -496,8 +496,10 @@ include "01-menu.php";
           <?= $row["customer_name"] ?>
           <span class="country-badge"><?= $row["country"] ?></span>
         </div>
-        <span class="order-id-badge">#<?= str_pad($row["order_id"], 8, "0", STR_PAD_LEFT) ?>
+        <span class="order-id-badge">
+          #<?= str_pad($row["order_id"], 8, "0", STR_PAD_LEFT) ?>
           <?php if ($pageName == "Order - Process" && isset($row['printed_status'])) echo ' &middot; ' . $row['printed_status']; ?>
+          <span style="font-size:0.7rem;color:#8392ab;font-weight:400;margin-left:6px;"><?= date('d M Y, h:iA', strtotime($row['created_at'])) ?></span>
         </span>
       </div>
       <div class="order-card-body">
