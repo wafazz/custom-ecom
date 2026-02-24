@@ -230,6 +230,12 @@ class CheckoutController
         $_SESSION["oemail"] = $_POST["oemail"];
         $_SESSION["remark"] = $_POST["remark"];
 
+        $cookieExpiry = time() + (60 * 60 * 24 * 30);
+        $cookieFields = ['fname', 'lname', 'add_1', 'add_2', 'city', 'state', 'postcode', 'ophone', 'oemail'];
+        foreach ($cookieFields as $field) {
+            setcookie("checkout_{$field}", $_POST[$field] ?? '', $cookieExpiry, '/');
+        }
+
         $states = $_SESSION["state"];
 
         $rowState = $this->stateModel->findByCountryAndName($country, $states);

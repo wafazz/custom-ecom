@@ -387,17 +387,24 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                             }
                         </style>
 
+                        <?php
+                        function ckVal($key) {
+                            if (!empty($_SESSION[$key])) return $_SESSION[$key];
+                            if (!empty($_COOKIE["checkout_{$key}"])) return $_COOKIE["checkout_{$key}"];
+                            return '';
+                        }
+                        ?>
                         <div class="row">
                             <div class="col-lg-6 col-md-6 col-sm-6">
                                 <div class="checkout__form__input">
                                     <p>First Name <span>*</span></p>
-                                    <input type="text" id="fname" name="fname" value="<?= isset($_SESSION["fname"]) ? $_SESSION["fname"] : ''; ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
+                                    <input type="text" id="fname" name="fname" value="<?= ckVal('fname') ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                 </div>
                             </div>
                             <div class="col-lg-6 col-md-6 col-sm-6">
                                 <div class="checkout__form__input">
                                     <p>Last Name <span>*</span></p>
-                                    <input type="text" id="lname" name="lname" value="<?= isset($_SESSION["lname"]) ? $_SESSION["lname"] : ''; ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
+                                    <input type="text" id="lname" name="lname" value="<?= ckVal('lname') ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                 </div>
                             </div>
                             <div class="col-lg-12">
@@ -409,17 +416,17 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                 </div>
                                 <div class="checkout__form__input">
                                     <p>Address <span>*</span></p>
-                                    <input type="text" placeholder="Street Address" id="add_1" name="add_1" value="<?= isset($_SESSION["add_1"]) ? $_SESSION["add_1"] : ''; ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
+                                    <input type="text" placeholder="Street Address" id="add_1" name="add_1" value="<?= ckVal('add_1') ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                     <input type="text" placeholder="Apartment. suite, unite ect ( optinal )" id="add_2"
-                                        name="add_2" value="<?= isset($_SESSION["add_2"]) ? $_SESSION["add_2"] : ''; ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly disabled' : ''; ?>>
+                                        name="add_2" value="<?= ckVal('add_2') ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly disabled' : ''; ?>>
                                 </div>
                                 <div class="checkout__form__input">
                                     <p>Postcode/Zip <span>*</span></p>
-                                    <input type="text" id="postcode" name="postcode" value="<?= isset($_SESSION["postcode"]) ? $_SESSION["postcode"] : ''; ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
+                                    <input type="text" id="postcode" name="postcode" value="<?= ckVal('postcode') ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                 </div>
                                 <div class="checkout__form__input">
                                     <p>Town/City <span>*</span></p>
-                                    <input type="text" id="city" name="city" value="<?= isset($_SESSION["city"]) ? $_SESSION["city"] : ''; ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
+                                    <input type="text" id="city" name="city" value="<?= ckVal('city') ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                 </div>
                                 <div class="checkout__form__input">
                                     <p>Province/State <span>*</span></p>
@@ -433,24 +440,19 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
     width: 100% !important;" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                             <option value="" <?= isset($_POST["nextCheckout"]) ? '' : 'selected'; ?> disabled>select state</option>
                                             <?php
+                                            $savedState = ckVal('state');
                                             foreach ($myState as $rowstate) {
-
-                                                if ($_SESSION["state"] == $rowstate["name"]) {
+                                                $sel = ($savedState == $rowstate["name"]) ? 'selected' : '';
                                             ?>
-                                                    <option selected value="<?= $rowstate["name"] ?>"><?= $rowstate["name"] ?></option>
-                                                <?php
-                                                } else {
-                                                ?>
-                                                    <option value="<?= $rowstate["name"] ?>"><?= $rowstate["name"] ?></option>
+                                                    <option <?= $sel ?> value="<?= $rowstate["name"] ?>"><?= $rowstate["name"] ?></option>
                                             <?php
-                                                }
                                             }
                                             ?>
                                         </select>
                                     <?php
                                     } else {
                                     ?>
-                                        <input type="text" id="state" name="state" value="<?= isset($_SESSION["state"]) ? $_SESSION["state"] : ''; ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
+                                        <input type="text" id="state" name="state" value="<?= ckVal('state') ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                     <?php
                                     }
                                     ?>
@@ -460,7 +462,7 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                             <div class="col-lg-6 col-md-6 col-sm-6">
                                 <div class="checkout__form__input">
                                     <p>Phone <span>*</span></p>
-                                    <input type="text" id="ophone" name="ophone" value="<?= isset($_SESSION["ophone"]) ? $_SESSION["ophone"] : ''; ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
+                                    <input type="text" id="ophone" name="ophone" value="<?= ckVal('ophone') ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                 </div>
                             </div>
                             <div class="col-lg-6 col-md-6 col-sm-6">
@@ -472,13 +474,14 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                         $emailUser = $_SESSION['member_email'];
                                     }
                                     ?>
-                                    <input type="email" id="oemail" name="oemail" value="<?= isset($_SESSION["oemail"]) ? $_SESSION["oemail"] : (isset($emailUser) ? $emailUser : ''); ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
+                                    <?php $emailVal = ckVal('oemail') ?: $emailUser; ?>
+                                    <input type="email" id="oemail" name="oemail" value="<?= $emailVal ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                 </div>
                             </div>
                             <div class="col-lg-12">
                                 <div class="checkout__form__input">
                                     <p>Oder notes <span>*</span></p>
-                                    <input type="text" id="remark" name="remark" value="<?= isset($_SESSION["remark"]) ? $_SESSION["remark"] : ''; ?>"
+                                    <input type="text" id="remark" name="remark" value="<?= $_SESSION["remark"] ?? '' ?>"
                                         placeholder="Note about your order, e.g, special noe for delivery" <?= isset($_POST["nextCheckout"]) ? 'readonly' : ''; ?>>
                                 </div>
                             </div>
