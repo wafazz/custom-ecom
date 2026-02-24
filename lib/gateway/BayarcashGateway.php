@@ -28,7 +28,7 @@ class BayarcashGateway
     public const STATUS_PENDING = 1;
     public const STATUS_UNSUCCESSFUL = 2;
     public const STATUS_SUCCESSFUL = 3;
-    public const STATUS_CANCELLED = -1;
+    public const STATUS_CANCELLED = 4;
 
     private $apiToken;
     private $secretKey;
