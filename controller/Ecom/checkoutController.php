@@ -837,7 +837,7 @@ class CheckoutController
             sleep(2);
         }
 
-        if ($dataOrder && $dataOrder["status"] == "1") {
+        if ($_GET["status"] == "3") {
             $getOrder = $this->orderDetailModel->findByOrderId($order_ids);
             require_once __DIR__ . '/../../view/ecom/e-senangpay-thank-you-keya88.php';
             exit();
