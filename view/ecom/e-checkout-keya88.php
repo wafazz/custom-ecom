@@ -525,7 +525,23 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                     <a href="<?= $domainURL ?>proceed-payment" class="site-btns">Pay Now (SenangPay)</a>
                                     <?php endif; ?>
                                     <?php if ($bayarcashEnabled): ?>
-                                    <a href="<?= $domainURL ?>proceed-bayarcash" class="site-btns" style="background:#1a73e8; margin-top:10px;">Pay Now (Bayarcash)</a>
+                                    <div style="margin-top:10px;">
+                                        <select id="bayarcash-channel" class="form-control" style="margin-bottom:8px;">
+                                            <option value="1">FPX Online Banking</option>
+                                            <option value="5">DuitNow Online Banking/Wallets</option>
+                                            <option value="6">DuitNow QR</option>
+                                            <option value="7">SPayLater (BNPL from Shopee)</option>
+                                            <option value="8">Boost PayFlex (BNPL from Boost)</option>
+                                        </select>
+                                        <a href="#" id="btn-bayarcash" class="site-btns" style="background:#1a73e8;">Pay Now (Bayarcash)</a>
+                                    </div>
+                                    <script>
+                                    document.getElementById('btn-bayarcash').addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        var ch = document.getElementById('bayarcash-channel').value;
+                                        window.location.href = '<?= $domainURL ?>proceed-bayarcash?channel=' + ch;
+                                    });
+                                    </script>
                                     <?php endif; ?>
                                 </div>
 

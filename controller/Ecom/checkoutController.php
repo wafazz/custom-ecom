@@ -638,7 +638,8 @@ class CheckoutController
             $callbackUrl = $domainURL . 'bayarcash-callback';
             $returnUrl = $domainURL . 'bayarcash-thank-you?order_id=' . $orderNumber;
 
-            $intent = $bayarcash->createPaymentIntent($orderNumber, $amount, $name, $email, $phone, $callbackUrl, $returnUrl);
+            $channel = isset($_GET['channel']) ? (int)$_GET['channel'] : \BayarcashGateway::CHANNEL_FPX;
+            $intent = $bayarcash->createPaymentIntent($orderNumber, $amount, $name, $email, $phone, $callbackUrl, $returnUrl, $channel);
 
             $paymentIntentId = $intent['id'] ?? null;
             $this->bayarcashTxModel->createTransaction([

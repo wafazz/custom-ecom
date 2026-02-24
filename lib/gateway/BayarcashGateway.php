@@ -13,10 +13,16 @@
 class BayarcashGateway
 {
     public const CHANNEL_FPX = 1;
+    public const CHANNEL_BANK_TRANSFER = 2;
+    public const CHANNEL_DIRECT_DEBIT = 3;
+    public const CHANNEL_FPX_LOC = 4;
     public const CHANNEL_DUITNOW_ONLINE = 5;
     public const CHANNEL_DUITNOW_QR = 6;
     public const CHANNEL_SPAYLATER = 7;
-    public const CHANNEL_CREDIT_CARD = 12;
+    public const CHANNEL_BOOST_PAYFLEX = 8;
+    public const CHANNEL_QRIS_BANKING = 9;
+    public const CHANNEL_QRIS_EWALLET = 10;
+    public const CHANNEL_NETS_SG = 11;
 
     public const STATUS_NEW = 0;
     public const STATUS_PENDING = 1;
@@ -157,10 +163,16 @@ class BayarcashGateway
     {
         $labels = [
             self::CHANNEL_FPX            => 'FPX Online Banking',
+            self::CHANNEL_BANK_TRANSFER  => 'Manual Bank Transfer',
+            self::CHANNEL_DIRECT_DEBIT   => 'Direct Debit',
+            self::CHANNEL_FPX_LOC        => 'FPX Line of Credit',
+            self::CHANNEL_DUITNOW_ONLINE => 'DuitNow Online Banking/Wallets',
             self::CHANNEL_DUITNOW_QR     => 'DuitNow QR',
-            self::CHANNEL_DUITNOW_ONLINE => 'DuitNow Online Banking',
-            self::CHANNEL_CREDIT_CARD    => 'Credit Card',
             self::CHANNEL_SPAYLATER      => 'SPayLater',
+            self::CHANNEL_BOOST_PAYFLEX  => 'Boost PayFlex',
+            self::CHANNEL_QRIS_BANKING   => 'QRIS Indonesia Online Banking',
+            self::CHANNEL_QRIS_EWALLET   => 'QRIS Indonesia eWallet',
+            self::CHANNEL_NETS_SG        => 'NETS Singapore',
         ];
         return $labels[(int)$channel] ?? 'Unknown';
     }
