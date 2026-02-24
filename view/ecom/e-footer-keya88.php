@@ -203,6 +203,31 @@
 
 
 
+<!-- Cookie Consent Banner -->
+<div id="cookie-consent" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#1a1a2e; color:#fff; padding:14px 20px; z-index:9998; font-family:'Montserrat',sans-serif; font-size:13px; align-items:center; justify-content:space-between; gap:12px; box-shadow:0 -2px 10px rgba(0,0,0,0.2);">
+    <span style="flex:1; line-height:1.5;">We use cookies to save your checkout details for a smoother shopping experience. No personal data is shared with third parties.</span>
+    <div style="display:flex; gap:8px; flex-shrink:0;">
+        <button id="cookie-accept" style="background:#e53637; color:#fff; border:none; padding:8px 20px; border-radius:4px; font-size:13px; font-weight:600; cursor:pointer;">Accept</button>
+        <button id="cookie-decline" style="background:none; color:#999; border:1px solid #555; padding:8px 14px; border-radius:4px; font-size:13px; cursor:pointer;">Decline</button>
+    </div>
+</div>
+<script>
+(function() {
+    var consent = localStorage.getItem('cookie-consent');
+    if (consent) return;
+    var banner = document.getElementById('cookie-consent');
+    banner.style.display = 'flex';
+    document.getElementById('cookie-accept').addEventListener('click', function() {
+        localStorage.setItem('cookie-consent', 'accepted');
+        banner.style.display = 'none';
+    });
+    document.getElementById('cookie-decline').addEventListener('click', function() {
+        localStorage.setItem('cookie-consent', 'declined');
+        banner.style.display = 'none';
+    });
+})();
+</script>
+
 <!-- PWA Install Banner (Android/Chrome) -->
 <div id="pwa-install-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#111; color:#fff; padding:12px 20px; z-index:9999; align-items:center; justify-content:space-between; font-family:'Montserrat',sans-serif; font-size:14px;">
     <span>Install Shaniena Empire app for a better experience</span>

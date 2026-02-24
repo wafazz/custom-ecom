@@ -350,6 +350,13 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                                                                             }
 
                                                                                                 ?>
+                <input type="hidden" name="cookie_consent" id="cookie_consent_field" value="0">
+                <script>
+                (function(){
+                    var c = localStorage.getItem('cookie-consent');
+                    if (c === 'accepted') document.getElementById('cookie_consent_field').value = '1';
+                })();
+                </script>
 
                 <div class="row">
                     <div class="col-lg-8">
