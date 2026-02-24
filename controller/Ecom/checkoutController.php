@@ -673,6 +673,8 @@ class CheckoutController
         $dateNow = dateNow();
         $domainURL = getMainUrl();
 
+        error_log("Bayarcash callback received: " . json_encode($_POST));
+
         $bcSettings = (new \Bayarcash($this->conn))->getSettings();
         $isBcSandbox = ($bcSettings['type'] ?? '') === 'sandbox';
         $bcToken = $isBcSandbox ? $bcSettings['sandbox_api_token'] : $bcSettings['api_token'];
@@ -681,6 +683,7 @@ class CheckoutController
         $bayarcash = new \BayarcashGateway($bcToken, $bcSecret, $bcPortal, $isBcSandbox);
 
         $result = $bayarcash->processCallback($_POST);
+        error_log("Bayarcash callback result: " . json_encode($result));
 
         $orderNumber = $result['order_number'] ?? '';
         $order_ids = str_replace('ORDERID_', '', $orderNumber);
