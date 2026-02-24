@@ -55,7 +55,14 @@ class BayarcashGateway
             'payment_channel'        => $channel,
         ];
 
-        $data['checksum'] = $this->generateChecksum($data);
+        $checksumData = [
+            'amount'          => $data['amount'],
+            'order_number'    => $data['order_number'],
+            'payer_email'     => $data['payer_email'],
+            'payer_name'      => $data['payer_name'],
+            'payment_channel' => $data['payment_channel'],
+        ];
+        $data['checksum'] = $this->generateChecksum($checksumData);
 
         return $this->apiRequest('POST', '/payment-intents', $data);
     }
