@@ -636,7 +636,7 @@ class CheckoutController
             $bayarcash = new \BayarcashGateway($bcToken, $bcSecret, $bcPortal, $isBcSandbox);
 
             $callbackUrl = $domainURL . 'bayarcash-callback';
-            $returnUrl = $domainURL . 'bayarcash-thank-you?order_id=' . $orderNumber;
+            $returnUrl = $domainURL . 'bayarcash-thank-you';
 
             $channel = isset($_GET['channel']) ? (int)$_GET['channel'] : \BayarcashGateway::CHANNEL_FPX;
             $intent = $bayarcash->createPaymentIntent($orderNumber, $amount, $name, $email, $phone, $callbackUrl, $returnUrl, $channel);
@@ -820,12 +820,13 @@ class CheckoutController
         $conn = $this->conn;
         $data = dataCountry($country);
 
-        if (!isset($_GET["order_id"]) || empty($_GET["order_id"])) {
+        $orderNumber = $_GET["order_number"] ?? $_GET["order_id"] ?? '';
+        if (empty($orderNumber)) {
             header("Location: /");
             exit();
         }
 
-        $order_ids = str_replace('ORDERID_', '', $_GET["order_id"]);
+        $order_ids = str_replace('ORDERID_', '', $orderNumber);
 
         $dataOrder = null;
         for ($i = 0; $i < 5; $i++) {
