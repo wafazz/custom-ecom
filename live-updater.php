@@ -1,11 +1,8 @@
 <?php
+require_once("live-db.php");
 date_default_timezone_set('Asia/Kuala_Lumpur');
 
-// DB connection
-$mysqli = new mysqli("localhost", "root", "224223Fakrul2897!", "2025_rozeyana");
-if ($mysqli->connect_error) {
-    die("DB Connection failed: " . $mysqli->connect_error);
-}
+
 
 $nows = date("Y-m-d H:i:s");
 

@@ -1,8 +1,5 @@
 <?php
-$mysqli = new mysqli("localhost", "root", "224223Fakrul2897!", "2025_rozeyana");
-if ($mysqli->connect_error) {
-    die("DB Connection failed: " . $mysqli->connect_error);
-}
+require_once("live-db.php");
 
 $timezone = "Asia/Kuala_Lumpur";
 if (function_exists('date_default_timezone_set')) date_default_timezone_set($timezone);
