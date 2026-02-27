@@ -36,7 +36,8 @@
                 <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
 
                 <span class="login100-form-logo">
-                    <img class="login-logo" src="<?= $mainDomain; ?>/assets/images/LOGO-ROZYANA-06.png">
+                    <img class="login-logo" src="<?= $mainDomain; ?><?= $row["image_path"] ?>">
+
                 </span>
 
                 <span class="login100-form-title p-b-34 p-t-27">
