@@ -2,9 +2,14 @@
 namespace Ecom;
 
 require_once __DIR__ . '/../../config/mainConfig.php';
+require_once __DIR__ . '/../../model/ImageSetting.php';
 
 class SelectCountryController
 {
+
+    private $imageModel;
+
+
     public function index()
     {
         $domainURL = getMainUrl();
@@ -25,6 +30,8 @@ class SelectCountryController
         $categories2 = getListCategoryBrand2(2);
 
         $newArrival = newProduct(8);
+
+        $row = $this->imageModel->findOne(['use_type' => 'logo', 'sorting' => '1']);
 
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (isset($_POST['country'])) {
