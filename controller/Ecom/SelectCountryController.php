@@ -6,9 +6,12 @@ require_once __DIR__ . '/../../model/ImageSetting.php';
 
 class SelectCountryController
 {
-
     private $imageModel;
 
+    public function __construct()
+    {
+        $this->imageModel = new \ImageSetting();
+    }
 
     public function index()
     {
@@ -31,8 +34,6 @@ class SelectCountryController
 
         $newArrival = newProduct(8);
 
-        $row = $this->imageModel->findOne(['use_type' => 'logo', 'sorting' => '1']);
-
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (isset($_POST['country'])) {
                 $country = $_POST['country'];
@@ -47,6 +48,8 @@ class SelectCountryController
 
             } 
         }
+
+        $logo = $this->imageModel->findOne(['use_type' => 'logo', 'sorting' => '1']);
 
         require_once __DIR__ . '/../../view/Auth/selectCountry.php';
     }
