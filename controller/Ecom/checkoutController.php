@@ -229,6 +229,7 @@ class CheckoutController
         $_SESSION["ophone"] = $_POST["ophone"];
         $_SESSION["oemail"] = $_POST["oemail"];
         $_SESSION["remark"] = $_POST["remark"];
+        $_SESSION["courier_service"] = $_POST["courier_service"] ?? '';
 
         if (($_POST['cookie_consent'] ?? '0') === '1') {
             $cookieExpiry = time() + (60 * 60 * 24 * 30);
@@ -327,7 +328,7 @@ class CheckoutController
             'payment_code'           => $paymentChannel === 'COD' ? 'COD' : 'nill',
             'payment_url'            => $paymentChannel === 'COD' ? 'COD' : 'nill',
             'ship_channel'           => $paymentChannel === 'COD' ? 'COD' : 'Doorstep Delivery',
-            'courier_service'        => '',
+            'courier_service'        => $_SESSION["courier_service"] ?? '',
             'awb_number'             => '',
             'tracking_url'           => '',
             'created_at'             => $dateNow,

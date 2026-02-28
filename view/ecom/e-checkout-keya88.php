@@ -492,6 +492,17 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                         placeholder="Note about your order, e.g, special noe for delivery" <?= isset($_POST["nextCheckout"]) ? 'readonly' : ''; ?>>
                                 </div>
                             </div>
+                            <div class="col-lg-12">
+                                <div class="checkout__form__input">
+                                    <p>Courier Service <span>*</span></p>
+                                    <?php $savedCourier = $_SESSION["courier_service"] ?? ''; ?>
+                                    <select name="courier_service" id="courier_service" style="height:50px !important;margin-bottom:25px;border:1px solid #e1e1e1;border-radius:2px;width:100% !important;" <?= isset($_POST["nextCheckout"]) ? 'disabled' : 'required'; ?>>
+                                        <option value="" disabled <?= empty($savedCourier) ? 'selected' : '' ?>>Select Courier</option>
+                                        <option value="J&T Express" <?= $savedCourier === 'J&T Express' ? 'selected' : '' ?>>J&T Express</option>
+                                        <option value="NinjaVan" <?= $savedCourier === 'NinjaVan' ? 'selected' : '' ?>>NinjaVan</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
 
