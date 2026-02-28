@@ -91,7 +91,18 @@ include "e-menu-keya88.php";
                         ?>
 
                     </div>
-                    <?php if ($productType === 'variable' && count($allVariants) > 1): ?>
+                    <?php if ($productType === 'variable' && count($allVariants) > 1):
+                        // Find first variant with stock for default selection
+                        $firstVariant = $allVariants[0];
+                        $firstStock = 0;
+                        foreach ($allVariants as $av) {
+                            if ($variantStocks[$av['id']]['physical_stock'] >= 1) {
+                                $firstVariant = $av;
+                                $firstStock = $variantStocks[$av['id']]['physical_stock'];
+                                break;
+                            }
+                        }
+                    ?>
                     <div class="product__details__variant" style="margin-bottom: 15px;">
                         <span>Variant:</span>
                         <select id="variant-selector" class="form-control" style="max-width:300px;display:inline-block;margin-left:10px;" onchange="onVariantChange()">
@@ -102,7 +113,8 @@ include "e-menu-keya88.php";
                             ?>
                                 <option value="<?= $v['id'] ?>"
                                     data-stock="<?= $vStock ?>"
-                                    data-max="<?= $vMax ?>">
+                                    data-max="<?= $vMax ?>"
+                                    <?= $v['id'] == $firstVariant['id'] ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($v['variant_name'] ?? $v['sku']) ?>
                                     <?= $vStock < 1 ? '(Out of Stock)' : '' ?>
                                 </option>
@@ -137,9 +149,6 @@ include "e-menu-keya88.php";
                         </div>
                         <?php
                         if ($productType === 'variable' && count($allVariants) > 1) {
-                            // For variable products, default to first variant
-                            $firstVariant = $allVariants[0];
-                            $firstStock = $variantStocks[$firstVariant['id']]['physical_stock'];
                             if ($firstStock >= 1) {
                             ?>
                                 <button class="cart-btn add-to-cart-btn" id="add-to-cart-btn" data-product-id="<?= $id ?>"
