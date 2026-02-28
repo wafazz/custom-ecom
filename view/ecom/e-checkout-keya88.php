@@ -466,13 +466,13 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
 
                                 </div>
                             </div>
-                            <div class="col-lg-6 col-md-6 col-sm-6">
+                            <div class="col-lg-4 col-md-4 col-sm-4">
                                 <div class="checkout__form__input">
                                     <p>Phone <span>*</span></p>
                                     <input type="text" id="ophone" name="ophone" value="<?= ckVal('ophone') ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                 </div>
                             </div>
-                            <div class="col-lg-6 col-md-6 col-sm-6">
+                            <div class="col-lg-4 col-md-4 col-sm-4">
                                 <div class="checkout__form__input">
                                     <p>Email <span>*</span></p>
                                     <?php
@@ -485,14 +485,7 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                     <input type="email" id="oemail" name="oemail" value="<?= $emailVal ?>" <?= isset($_POST["nextCheckout"]) ? 'readonly' : 'required'; ?>>
                                 </div>
                             </div>
-                            <div class="col-lg-12">
-                                <div class="checkout__form__input">
-                                    <p>Oder notes <span>*</span></p>
-                                    <input type="text" id="remark" name="remark" value="<?= $_SESSION["remark"] ?? '' ?>"
-                                        placeholder="Note about your order, e.g, special noe for delivery" <?= isset($_POST["nextCheckout"]) ? 'readonly' : ''; ?>>
-                                </div>
-                            </div>
-                            <div class="col-lg-12">
+                            <div class="col-lg-4 col-md-4 col-sm-4">
                                 <div class="checkout__form__input">
                                     <p>Courier Service <span>*</span></p>
                                     <?php $savedCourier = $_SESSION["courier_service"] ?? ''; ?>
@@ -501,6 +494,13 @@ if (isset($_GET["dev"]) && !empty($_GET["dev"])) {
                                         <option value="J&T Express" <?= $savedCourier === 'J&T Express' ? 'selected' : '' ?>>J&T Express</option>
                                         <option value="NinjaVan" <?= $savedCourier === 'NinjaVan' ? 'selected' : '' ?>>NinjaVan</option>
                                     </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="checkout__form__input">
+                                    <p>Oder notes <span>*</span></p>
+                                    <input type="text" id="remark" name="remark" value="<?= $_SESSION["remark"] ?? '' ?>"
+                                        placeholder="Note about your order, e.g, special noe for delivery" <?= isset($_POST["nextCheckout"]) ? 'readonly' : ''; ?>>
                                 </div>
                             </div>
                         </div>
