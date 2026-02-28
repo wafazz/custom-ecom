@@ -176,29 +176,62 @@ class OrderController
                 $_SESSION['upload_error'] = "Order #" . $formatted . " " . $createShipping["message"];
                 header("Location: " . $this->domainURL . "new-order");
             }
-        } else if (isset($_POST["jnt"])) {
+        } else if (isset($_POST["sendCourier"])) {
             $orderID = $_POST["orderID"];
-            $createJTShipping = createJTShipping($orderID);
+            $orderIDs = array_map('intval', explode(",", $orderID));
 
-            if (empty($createJTShipping["false"])) {
-                $_SESSION['upload_success'] = "All order successfull send all order to J&T.";
-                $addActivity = activity($_SESSION['user']->id, "Successfully send All order successfull send all order to J&T.", "customer_orders|$orderID", "submit_awb_jnt");
-            } else {
-                $_SESSION['upload_error'] = $createJTShipping["failed"] . "/" . $createJTShipping["all"] . " of order failed to send to J&T.<br>" . $createJTShipping["false"];
-                $addActivity = activity($_SESSION['user']->id, "Failed send to J&T", "customer_orders|$orderID", "submit_awb_jnt");
+            $jntIds = [];
+            $ninjaIds = [];
+            $noService = [];
+            foreach ($orderIDs as $oid) {
+                $order = $this->orderModel->getOrderDetails($oid);
+                $courier = $order['courier_service'] ?? '';
+                if ($courier === 'J&T Express') {
+                    $jntIds[] = $oid;
+                } elseif ($courier === 'NinjaVan') {
+                    $ninjaIds[] = $oid;
+                } else {
+                    $noService[] = $oid;
+                }
             }
 
-            header("Location: " . $this->domainURL . "new-order");
-        } else if (isset($_POST["ninja"])) {
-            $orderID = $_POST["orderID"];
-            $result = createNinjaVanShipping($orderID);
+            $messages = [];
+            $errors = [];
 
-            if (empty($result['false'])) {
-                $_SESSION['upload_success'] = $result['message'] ?? "Successfully submitted order(s) to NinjaVan.";
-                activity($_SESSION['user']->id, "Successfully submitted order(s) to NinjaVan.", "customer_orders|$orderID", "submit_awb_ninjavan");
-            } else {
-                $_SESSION['upload_error'] = ($result['failed'] ?? 0) . "/" . ($result['all'] ?? 0) . " order(s) failed to send to NinjaVan.<br>" . $result['false'];
-                activity($_SESSION['user']->id, "Failed send to NinjaVan", "customer_orders|$orderID", "submit_awb_ninjavan");
+            if (!empty($jntIds)) {
+                $jntStr = implode(",", $jntIds);
+                $createJTShipping = createJTShipping($jntStr);
+                if (empty($createJTShipping["false"])) {
+                    $messages[] = "Successfully sent " . count($jntIds) . " order(s) to J&T.";
+                    activity($_SESSION['user']->id, "Successfully sent order(s) to J&T.", "customer_orders|$jntStr", "submit_awb_jnt");
+                } else {
+                    $errors[] = $createJTShipping["failed"] . "/" . $createJTShipping["all"] . " order(s) failed to send to J&T.<br>" . $createJTShipping["false"];
+                    activity($_SESSION['user']->id, "Failed send to J&T", "customer_orders|$jntStr", "submit_awb_jnt");
+                }
+            }
+
+            if (!empty($ninjaIds)) {
+                $ninjaStr = implode(",", $ninjaIds);
+                $result = createNinjaVanShipping($ninjaStr);
+                if (empty($result['false'])) {
+                    $messages[] = $result['message'] ?? "Successfully sent " . count($ninjaIds) . " order(s) to NinjaVan.";
+                    activity($_SESSION['user']->id, "Successfully submitted order(s) to NinjaVan.", "customer_orders|$ninjaStr", "submit_awb_ninjavan");
+                } else {
+                    $errors[] = ($result['failed'] ?? 0) . "/" . ($result['all'] ?? 0) . " order(s) failed to send to NinjaVan.<br>" . $result['false'];
+                    activity($_SESSION['user']->id, "Failed send to NinjaVan", "customer_orders|$ninjaStr", "submit_awb_ninjavan");
+                }
+            }
+
+            if (!empty($noService)) {
+                $noStr = implode(", #", array_map(function($id) { return str_pad($id, 8, '0', STR_PAD_LEFT); }, $noService));
+                $errors[] = "Order(s) #$noStr have no courier service assigned.";
+            }
+
+            if (!empty($messages)) {
+                $_SESSION['upload_success'] = implode("<br>", $messages);
+            }
+            if (!empty($errors)) {
+                $_SESSION['upload_error'] = implode("<br>", $errors);
             }
 
             header("Location: " . $this->domainURL . "new-order");
