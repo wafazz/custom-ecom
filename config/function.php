@@ -385,17 +385,13 @@ function stockBalanceIndividual($id)
     $totalStockOut = 0;
     $sku = '';
     $maxPurchase = 0;
-    $variantCount = 0;
     while ($row = $result->fetch_assoc()) {
-        $variantCount++;
         if (empty($sku)) $sku = $row["sku"];
         $totalStockIn += $row["total_stock_in"];
         $totalStockOut += $row["total_stock_out"];
         $totalPhysicalStock += max(0, $row["physical_stock"]);
         if ($row["max_purchase"] > $maxPurchase) $maxPurchase = $row["max_purchase"];
-        error_log("stockBalanceIndividual($id): variant={$row['variant_id']} sku={$row['sku']} stock_in={$row['total_stock_in']} stock_out={$row['total_stock_out']} physical={$row['physical_stock']}");
     }
-    error_log("stockBalanceIndividual($id): TOTAL variants=$variantCount physical_stock=$totalPhysicalStock");
 
     $data = array(
         "sku" => $sku,
