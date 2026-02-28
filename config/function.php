@@ -2273,9 +2273,9 @@ function createNinjaVanShipping($id)
         $orderPayload = [
             'service_type'        => 'Parcel',
             'service_level'       => 'Standard',
-            'requested_tracking_number' => 'SHANIENA-' . $formatted,
+            'requested_tracking_number' => $formatted,
             'reference'           => [
-                'merchant_order_number' => 'SHANIENA-' . $formatted,
+                'merchant_order_number' => 'ejenHUB_' . $formatted,
             ],
             'from' => [
                 'name'          => 'ROZZ BEAUTY LEGACY',
@@ -2318,6 +2318,10 @@ function createNinjaVanShipping($id)
                 ],
             ],
         ];
+
+        if (strtolower($order['payment_channel']) === 'cod') {
+            $orderPayload['parcel_job']['cash_on_delivery'] = (float) $order['myr_value_include_postage'];
+        }
 
         $response = $gw->createOrder($accessToken, $orderPayload);
 
