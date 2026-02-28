@@ -380,14 +380,25 @@ function stockBalanceIndividual($id)
 
     $result = $conn->query($sql);
 
-    $row = $result->fetch_assoc();
+    $totalPhysicalStock = 0;
+    $totalStockIn = 0;
+    $totalStockOut = 0;
+    $sku = '';
+    $maxPurchase = 0;
+    while ($row = $result->fetch_assoc()) {
+        if (empty($sku)) $sku = $row["sku"];
+        $totalStockIn += $row["total_stock_in"];
+        $totalStockOut += $row["total_stock_out"];
+        $totalPhysicalStock += max(0, $row["physical_stock"]);
+        if ($row["max_purchase"] > $maxPurchase) $maxPurchase = $row["max_purchase"];
+    }
 
     $data = array(
-        "sku" => $row["sku"],
-        "total_stock_in" => $row["total_stock_in"],
-        "total_stock_out" => $row["total_stock_out"],
-        "physical_stock" => $row["physical_stock"],
-        "max_purchase" => $row["max_purchase"]
+        "sku" => $sku,
+        "total_stock_in" => $totalStockIn,
+        "total_stock_out" => $totalStockOut,
+        "physical_stock" => $totalPhysicalStock,
+        "max_purchase" => $maxPurchase
     );
     return ($data);
 }
