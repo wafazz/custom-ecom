@@ -351,7 +351,7 @@ include "e-menu-keya88.php";
                                     <img src="https://rozeyana.com/assets/images/out-of-stock.png" style="
                                             width: 100%;
                                         ">
-                                        <?= $stock1 ?>
+                                        <?= $stock1["physical_stock"] ?>
                                 </div>
                             <?php
                             }
