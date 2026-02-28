@@ -113,9 +113,18 @@ class NinjaVanGateway
             return $decoded;
         }
 
+        $errorMsg = $decoded['error']['message'] ?? ($decoded['message'] ?? 'API error');
+        if (!empty($decoded['error']['details'])) {
+            $fieldErrors = [];
+            foreach ($decoded['error']['details'] as $d) {
+                $fieldErrors[] = ($d['field'] ?? '?') . ': ' . ($d['message'] ?? '');
+            }
+            $errorMsg .= ' (' . implode(', ', $fieldErrors) . ')';
+        }
+
         return [
             'success'   => false,
-            'error'     => $decoded['error']['message'] ?? ($decoded['message'] ?? 'API error'),
+            'error'     => $errorMsg,
             'http_code' => $httpCode,
             'response'  => $decoded,
         ];

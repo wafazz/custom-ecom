@@ -2334,7 +2334,14 @@ function createNinjaVanShipping($id)
             $successCount++;
         } else {
             $errorMsg = $response['error'] ?? ($response['message'] ?? 'Unknown error');
-            $trackingFalse .= "<span style='color:red;'>** Failed order #" . $formatted . ": " . htmlspecialchars($errorMsg) . "</span><br>";
+            $errorDetails = '';
+            if (!empty($response['response']['error']['details'])) {
+                foreach ($response['response']['error']['details'] as $detail) {
+                    $errorDetails .= ' [' . ($detail['field'] ?? '') . ': ' . ($detail['message'] ?? '') . ']';
+                }
+            }
+            error_log("NinjaVan createOrder failed for order #$formatted: " . json_encode($response));
+            $trackingFalse .= "<span style='color:red;'>** Failed order #" . $formatted . ": " . htmlspecialchars($errorMsg . $errorDetails) . "</span><br>";
             $failCount++;
         }
     }
