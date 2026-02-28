@@ -2146,6 +2146,212 @@ function dataSettingNinjaVan()
     return ($data);
 }
 
+function tokenNinjaVanGenerate($clientId, $clientSecret, $sandbox)
+{
+    require_once __DIR__ . '/../lib/gateway/NinjaVanGateway.php';
+
+    $conn = getDbConnection();
+    $dateNow = dateNow();
+    $mode = $sandbox ? 'sandbox' : 'production';
+
+    $gw = new NinjaVanGateway($clientId, $clientSecret, $sandbox);
+    $result = $gw->authenticate();
+
+    if (empty($result['access_token'])) {
+        return ['success' => false, 'error' => $result['error'] ?? 'Failed to get access token'];
+    }
+
+    $token = $result['access_token'];
+    $tokenType = $result['token_type'] ?? 'Bearer';
+    $expiresIn = (int)($result['expires_in'] ?? 0);
+
+    $timestamp = strtotime($dateNow);
+    $expiredAt = date('Y-m-d H:i:s', $timestamp + $expiresIn);
+
+    $stmt = $conn->prepare("INSERT INTO `ninjavan_token` (`mode`, `access_token`, `token_type`, `expires_in`, `created_at`, `expired_at`) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param('sssiss', $mode, $token, $tokenType, $expiresIn, $dateNow, $expiredAt);
+    $stmt->execute();
+    $stmt->close();
+
+    return ['success' => true, 'access_token' => $token, 'expires_in' => $expiresIn];
+}
+
+function ninjaVanToken($sandbox)
+{
+    $conn = getDbConnection();
+    $mode = $sandbox ? 'sandbox' : 'production';
+    $dateNow = dateNow();
+
+    $stmt = $conn->prepare("SELECT `access_token`, `token_type`, `expires_in`, `created_at`, `expired_at` FROM `ninjavan_token` WHERE `mode` = ? ORDER BY `id` DESC LIMIT 1");
+    $stmt->bind_param('s', $mode);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+
+    if ($row) {
+        $expiredAt = strtotime($row['expired_at']);
+        $now = strtotime($dateNow);
+        // Auto-refresh if expired or expiring within 5 minutes
+        if (($expiredAt - $now) > 300) {
+            return $row['access_token'];
+        }
+    }
+
+    // Token expired or not found — regenerate
+    $nv = dataSettingNinjaVan();
+    if ($sandbox) {
+        $clientId = $nv['username_sanbox'];
+        $clientSecret = $nv['key_sandbox'];
+    } else {
+        $clientId = $nv['username_production'];
+        $clientSecret = $nv['key_production'];
+    }
+
+    $gen = tokenNinjaVanGenerate($clientId, $clientSecret, $sandbox);
+    if (!empty($gen['success'])) {
+        return $gen['access_token'];
+    }
+
+    return null;
+}
+
+function createNinjaVanShipping($id)
+{
+    require_once __DIR__ . '/../lib/gateway/NinjaVanGateway.php';
+
+    $conn = getDbConnection();
+    $nv = dataSettingNinjaVan();
+    $dateNow = dateNow();
+    $sandbox = ($nv['status'] == '0');
+
+    $accessToken = ninjaVanToken($sandbox);
+    if (!$accessToken) {
+        return ['success' => false, 'tracking_number' => '', 'tracking_url' => '', 'message' => 'Failed to get NinjaVan access token'];
+    }
+
+    // Bulk support: comma-separated IDs
+    $idArray = array_filter(array_map('intval', explode(',', $id)));
+    if (empty($idArray)) {
+        return ['success' => false, 'tracking_number' => '', 'tracking_url' => '', 'message' => 'No valid order IDs'];
+    }
+
+    $idList = implode(',', $idArray);
+    $sql = "SELECT * FROM customer_orders WHERE id IN ($idList)";
+    $result = $conn->query($sql);
+
+    if (!$result || $result->num_rows == 0) {
+        return ['success' => false, 'tracking_number' => '', 'tracking_url' => '', 'message' => 'No matching orders found'];
+    }
+
+    if ($sandbox) {
+        $clientId = $nv['username_sanbox'];
+        $clientSecret = $nv['key_sandbox'];
+    } else {
+        $clientId = $nv['username_production'];
+        $clientSecret = $nv['key_production'];
+    }
+
+    $gw = new NinjaVanGateway($clientId, $clientSecret, $sandbox);
+
+    $successCount = 0;
+    $failCount = 0;
+    $trackingTrue = '';
+    $trackingFalse = '';
+    $totalCount = 0;
+
+    while ($order = $result->fetch_assoc()) {
+        $totalCount++;
+        $orderId = $order['id'];
+        $formatted = str_pad($orderId, 8, '0', STR_PAD_LEFT);
+        $receiverName = trim($order['customer_name'] . ' ' . ($order['customer_name_last'] ?? ''));
+        $receiverAddr = $order['address_1'] . ', ' . $order['address_2'] . ', ' . $order['city'] . ', ' . $order['state'];
+        $receiverPhone = $order['customer_phone'];
+        $receiverPostcode = preg_replace('/\s+/', '', $order['postcode']);
+        $receiverEmail = $order['customer_email'] ?? '';
+
+        $orderPayload = [
+            'service_type'        => 'Parcel',
+            'service_level'       => 'Standard',
+            'requested_tracking_number' => 'SHANIENA-' . $formatted,
+            'reference'           => [
+                'merchant_order_number' => 'SHANIENA-' . $formatted,
+            ],
+            'from' => [
+                'name'          => 'ROZZ BEAUTY LEGACY',
+                'phone_number'  => '+60389123807',
+                'email'         => 'wafazz.tech@gmail.com',
+                'address'       => [
+                    'address1'    => 'B-G-48, SAVANNA LIFESTYLE RETAIL',
+                    'address2'    => 'Jalan Southville 2, Southville City',
+                    'city'        => 'Dengkil',
+                    'state'       => 'Selangor',
+                    'postcode'    => '43800',
+                    'country'     => 'MY',
+                ],
+            ],
+            'to' => [
+                'name'          => $receiverName,
+                'phone_number'  => $receiverPhone,
+                'email'         => $receiverEmail,
+                'address'       => [
+                    'address1'    => $order['address_1'],
+                    'address2'    => $order['address_2'],
+                    'city'        => $order['city'],
+                    'state'       => $order['state'],
+                    'postcode'    => $receiverPostcode,
+                    'country'     => 'MY',
+                ],
+            ],
+            'parcel_job' => [
+                'is_pickup_required'  => false,
+                'pickup_service_type' => 'Scheduled',
+                'pickup_service_level'=> 'Standard',
+                'delivery_start_date' => date('Y-m-d', strtotime($dateNow . ' +1 day')),
+                'delivery_timeslot'   => [
+                    'start_time' => '09:00',
+                    'end_time'   => '22:00',
+                    'timezone'   => 'Asia/Kuala_Lumpur',
+                ],
+                'dimensions' => [
+                    'weight' => 0.5,
+                ],
+            ],
+        ];
+
+        $response = $gw->createOrder($accessToken, $orderPayload);
+
+        if (!empty($response['tracking_number'])) {
+            $awb = $response['tracking_number'];
+            $trackingURL = 'https://www.ninjavan.co/en-my/tracking?id=' . $awb;
+
+            $stmtUpdate = $conn->prepare("UPDATE customer_orders SET `status`='2', `ship_channel`='Doorstep Delivery', `courier_service`='NINJAVAN', `awb_number`=?, `tracking_url`=?, `updated_at`=? WHERE id=?");
+            $stmtUpdate->bind_param('sssi', $awb, $trackingURL, $dateNow, $orderId);
+            $stmtUpdate->execute();
+            $stmtUpdate->close();
+
+            $trackingTrue .= "<span style='color:green;'>** Successful assign tracking to order #" . $formatted . ". AWB: " . $awb . "</span><br>";
+            $successCount++;
+        } else {
+            $errorMsg = $response['error'] ?? ($response['message'] ?? 'Unknown error');
+            $trackingFalse .= "<span style='color:red;'>** Failed order #" . $formatted . ": " . htmlspecialchars($errorMsg) . "</span><br>";
+            $failCount++;
+        }
+    }
+
+    return [
+        'success'         => ($failCount == 0),
+        'all'             => $totalCount,
+        'successCount'    => $successCount,
+        'failed'          => $failCount,
+        'true'            => $trackingTrue,
+        'false'           => $trackingFalse,
+        'tracking_number' => '',
+        'tracking_url'    => '',
+        'message'         => $successCount . '/' . $totalCount . ' orders submitted to NinjaVan',
+    ];
+}
+
 function dataSettingPosLaju()
 {
     $conn = getDbConnection();

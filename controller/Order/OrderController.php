@@ -191,7 +191,16 @@ class OrderController
             header("Location: " . $this->domainURL . "new-order");
         } else if (isset($_POST["ninja"])) {
             $orderID = $_POST["orderID"];
-            $_SESSION['upload_success'] = "Successfully submit order to NinjaVan";
+            $result = createNinjaVanShipping($orderID);
+
+            if (empty($result['false'])) {
+                $_SESSION['upload_success'] = $result['message'] ?? "Successfully submitted order(s) to NinjaVan.";
+                activity($_SESSION['user']->id, "Successfully submitted order(s) to NinjaVan.", "customer_orders|$orderID", "submit_awb_ninjavan");
+            } else {
+                $_SESSION['upload_error'] = ($result['failed'] ?? 0) . "/" . ($result['all'] ?? 0) . " order(s) failed to send to NinjaVan.<br>" . $result['false'];
+                activity($_SESSION['user']->id, "Failed send to NinjaVan", "customer_orders|$orderID", "submit_awb_ninjavan");
+            }
+
             header("Location: " . $this->domainURL . "new-order");
         }
     }

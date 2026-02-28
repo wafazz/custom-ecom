@@ -451,6 +451,7 @@ include "01-menu.php";
       <span class="selected-badge" id="selectedCount">0 selected</span>
       <?php if ($pageName == "Order - New") { ?>
         <button class="btn btn-sm btn-info" id="bulkJNT" type="submit" name="jnt" disabled><i class="fa-solid fa-truck-fast"></i> Bulk Send to J&T</button>
+        <button class="btn btn-sm btn-warning" id="bulkNinja" type="submit" name="ninja" disabled><i class="fa-solid fa-truck-fast"></i> Bulk Send to NinjaVan</button>
       <?php } else if ($pageName == "Order - Process") { ?>
         <button class="btn btn-sm btn-primary" id="bulkJNT" type="submit" name="printAWB" disabled><i class="fa-solid fa-print"></i> Bulk Print AWB</button>
         <button class="btn btn-sm btn-primary" id="bulkJNTS" type="submit" name="move-indelivery" disabled><i class="fa-solid fa-truck-fast"></i> Bulk Move In Delivery</button>
@@ -588,6 +589,7 @@ include "01-menu.php";
                   <a class="btn btn-dark" href="<?= $domainURL ?>set-order-to-processing/<?= $row["order_id"] ?>"><i class="fa-solid fa-right-long"></i> To Processing</a>
                 <?php } else { ?>
                   <button class="btn btn-info" type="submit" name="jnt"><i class="fa-solid fa-truck-fast"></i> Send to J&T</button>
+                  <button class="btn btn-warning" type="submit" name="ninja"><i class="fa-solid fa-truck-fast"></i> Send to NinjaVan</button>
                 <?php } ?>
                 <a class="btn btn-outline-danger" href="<?= $domainURL ?>set-order-status/<?= $row["order_id"] ?>/1/6"><i class="fa-solid fa-ban"></i> Cancel</a>
               </form>
@@ -670,6 +672,7 @@ include "01-menu.php";
   const allIdsInput = document.getElementById('allIDS');
   const bulkBtn = document.getElementById('bulkJNT');
   const bulksBtn = document.getElementById('bulkJNTS');
+  const bulkNinjaBtn = document.getElementById('bulkNinja');
   const selectedCount = document.getElementById('selectedCount');
 
   function updateAllIds() {
@@ -678,6 +681,7 @@ include "01-menu.php";
     selectedCount.textContent = checkedValues.length > 0 ? checkedValues.length + ' selected' : '0 selected';
     if (bulkBtn) bulkBtn.disabled = checkedValues.length === 0;
     if (bulksBtn) bulksBtn.disabled = checkedValues.length === 0;
+    if (bulkNinjaBtn) bulkNinjaBtn.disabled = checkedValues.length === 0;
   }
 
   checkAll.addEventListener('change', function() {

@@ -476,7 +476,12 @@ class SettingController
             $update = $this->courierSetting->updateSandbox('ninjavan_setting', $data);
 
             if ($update) {
-                $_SESSION['upload_success'] = "Successful update data in Sandbox Mode";
+                $gen = tokenNinjaVanGenerate($_POST["username"], $_POST["key"], true);
+                if (!empty($gen['success'])) {
+                    $_SESSION['upload_success'] = "Successful update data in Sandbox Mode and created new token.";
+                } else {
+                    $_SESSION['upload_success'] = "Successful update data in Sandbox Mode (token creation failed: " . ($gen['error'] ?? 'Unknown') . ")";
+                }
             } else {
                 $_SESSION['upload_error'] = "Sorry! Failed to update data in Sandbox Mode.";
             }
@@ -493,7 +498,14 @@ class SettingController
             ];
             $update = $this->courierSetting->updateProduction('ninjavan_setting', $data);
 
-            if ($update) {
+            if ($update && isset($_POST['createToken'])) {
+                $gen = tokenNinjaVanGenerate($_POST["username"], $_POST["key"], false);
+                if (!empty($gen['success'])) {
+                    $_SESSION['upload_success'] = "Successful update data in Production Mode and created new token.";
+                } else {
+                    $_SESSION['upload_error'] = "Saved credentials but failed to create token: " . ($gen['error'] ?? 'Unknown error');
+                }
+            } else if ($update) {
                 $_SESSION['upload_success'] = "Successful update data in Production Mode";
             } else {
                 $_SESSION['upload_error'] = "Sorry! Failed to update data in Production Mode.";
