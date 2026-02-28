@@ -33,7 +33,7 @@ class NinjaVanGateway
             'grant_type'    => 'client_credentials',
         ];
 
-        return $this->apiRequest('POST', $url, $data);
+        return $this->apiRequest('POST', $url, $data, null, false, true);
     }
 
     public function createOrder($accessToken, $orderData)
@@ -65,7 +65,7 @@ class NinjaVanGateway
         return $this->baseUrl;
     }
 
-    private function apiRequest($method, $url, $data = [], $accessToken = null, $rawResponse = false)
+    private function apiRequest($method, $url, $data = [], $accessToken = null, $rawResponse = false, $formEncoded = false)
     {
         $ch = curl_init();
 
@@ -76,10 +76,14 @@ class NinjaVanGateway
         }
 
         if ($method === 'POST' && !empty($data)) {
-            $jsonBody = json_encode($data);
-            $headers[] = 'Content-Type: application/json';
+            if ($formEncoded) {
+                $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+            } else {
+                $headers[] = 'Content-Type: application/json';
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            }
             curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonBody);
         } elseif ($method === 'DELETE') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
         }
